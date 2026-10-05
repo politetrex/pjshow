@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>镜面激光迷宫 · 编辑器</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0e14;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+    }
+    #app {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      flex-shrink: 0;
+      background: #111820;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      overflow-y: auto;
+      border-right: 1px solid #1f2d3d;
+    }
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb { background: #2a3a4e; border-radius: 3px; }
+    .panel {
+      background: #1a2433;
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid #2a3a4e;
+      flex-shrink: 0;
+    }
+    .panel h3 {
+      color: #8ab4f8;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .mode-toggle { display: flex; gap: 6px; }
+    .mode-btn {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .mode-btn.active {
+      background: #2d5a9e;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(45,90,158,0.5);
+    }
+    .mode-btn.inactive {
+      background: #1e2a38;
+      color: #7a8fa8;
+    }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .tool-btn {
+      padding: 8px 4px;
+      border: 1px solid #2a3a4e;
+      border-radius: 9px;
+      background: #1e2a38;
+      color: #b0c4de;
+      font-size: 11px;
+      cursor: pointer;
+      transition: 0.15s;
+      text-align: center;
+    }
+    .tool-btn.active {
+      border-color: #4a8fe0;
+      background: #1e3450;
+      color: #fff;
+    }
+    .tool-btn:hover { background: #24364a; }
+    .color-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .color-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .color-swatch.active {
+      border-color: #fff;
+      box-shadow: 0 0 8px rgba(255,255,255,0.4);
+    }
+    .file-actions { display: flex; gap: 6px; }
+    .file-actions button {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      border-radius: 9px;
+      background: #2a3a4e;
+      color: #c0d0e0;
+      font-size: 11px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .file-actions button:hover { background: #3a4e68; }
+    .undo-actions { display: flex; gap: 6px; }
+    .undo-actions button {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      border-radius: 9px;
+      background: #2a3a4e;
+      color: #c0d0e0;
+      font-size: 11px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .undo-actions button:hover:not(:disabled) { background: #3a4e68; }
+    .undo-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* === 主区域：居中 canvas === */
+    .main-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+    #gameCanvas {
+      display: block;
+      cursor: crosshair;
+      background: #0b1119;
+      box-shadow: 0 0 0 2px #0a0e14, 0 0 0 4px #1f3145;
+      border-radius: 8px;
+    }
+
+    .status-bar {
+      position: fixed;
+      bottom: 12px;
+      left: 262px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #8ab4f8;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .status-bar > * { pointer-events: auto; }
+    .win-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: #1a3a1a;
+      color: #6bff8a;
+      border: 1px solid #2a5a2a;
+      display: none;
+    }
+    .win-badge.show { display: inline-block; }
+    input[type="file"] { display: none; }
+    .hint-text {
+      font-size: 10px;
+      color: #4f6988;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .history-info {
+      font-size: 10px;
+      color: #5f7a9a;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .edit-only { display: block; }
+    .test-only { display: none; }
+    body.test-mode .edit-only { display: none; }
+    body.test-mode .test-only { display: block; }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #1f2d3d;
+    }
+    .legend-item:last-child { border-bottom: none; }
+    .legend-icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      background: #0b1119;
+      border-radius: 7px;
+      border: 1px solid #2a3a4e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .legend-text {
+      font-size: 10px;
+      color: #8aa4c0;
+      line-height: 1.3;
+    }
+    .legend-text strong {
+      color: #c0d8f0;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 1px;
+    }
+
+    .laser-dir-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .dir-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 1px solid #2a3a4e;
+      background: #1e2a38;
+      color: #b0c4de;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .dir-btn.active {
+      border-color: #4a8fe0;
+      background: #1e3450;
+      color: #fff;
+    }
+    .dir-btn:hover { background: #24364a; }
+
+    .size-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+
+    .laser-tooltip {
+      position: fixed;
+      padding: 4px 10px;
+      background: rgba(10, 16, 24, 0.95);
+      border: 1px solid #3a5a7a;
+      border-radius: 8px;
+      color: #e0f0ff;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      pointer-events: none;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      white-space: nowrap;
+    }
+    .laser-tooltip .swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="sidebar">
+    <div class="panel">
+      <h3>模式</h3>
+      <div class="mode-toggle">
+        <button id="modeEdit" class="mode-btn active">编辑</button>
+        <button id="modeTest" class="mode-btn inactive">测试</button>
+      </div>
+    </div>
+
+    <div class="edit-only">
+      <div class="panel">
+        <h3>历史</h3>
+        <div class="undo-actions">
+          <button id="undoBtn" disabled>↶ 撤回</button>
+          <button id="redoBtn" disabled>↷ 重做</button>
+        </div>
+        <div class="history-info" id="historyInfo">无可撤回操作</div>
+      </div>
+
+      <div class="panel">
+        <h3>地图尺寸</h3>
+        <div class="size-grid" id="sizeGrid">
+          <button class="tool-btn" data-size="8">8 × 8</button>
+          <button class="tool-btn" data-size="10">10 × 10</button>
+          <button class="tool-btn" data-size="16">16 × 16</button>
+          <button class="tool-btn" data-size="24">24 × 24</button>
+          <button class="tool-btn active" data-size="32">32 × 32</button>
+        </div>
+        <div class="hint-text">切换尺寸会清空当前地图</div>
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <button id="clearBtn" class="tool-btn" style="flex:1;">🗑️ 清空</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>工具栏</h3>
+        <div class="tool-grid">
+          <button class="tool-btn active" data-tool="laser">🔺 激光</button>
+          <button class="tool-btn" data-tool="mirror">🪞 镜子</button>
+          <button class="tool-btn" data-tool="receiver">🎯 接收器</button>
+          <button class="tool-btn" data-tool="filter">🎨 滤镜</button>
+          <button class="tool-btn" data-tool="erase">🗑️ 擦除</button>
+        </div>
+        <div class="hint-text" id="toolHint">点击格子放置激光发射器</div>
+        
+        <div id="laserDirPanel" class="laser-dir-panel" style="display:none;">
+          <button class="dir-btn" data-dir="RIGHT" title="向右">→</button>
+          <button class="dir-btn" data-dir="DOWN" title="向下">↓</button>
+          <button class="dir-btn" data-dir="LEFT" title="向左">←</button>
+          <button class="dir-btn" data-dir="UP" title="向上">↑</button>
+        </div>
+
+        <div id="mirrorTypePanel" style="display:none; margin-top:6px;">
+          <div class="tool-grid">
+            <button class="tool-btn active" data-mirror-kind="two-way">双面镜</button>
+            <button class="tool-btn" data-mirror-kind="one-way">单面镜</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>颜色</h3>
+        <div class="color-row" id="colorRow">
+          <div class="color-swatch active" data-color="ff0000" style="background:#ff0000"></div>
+          <div class="color-swatch" data-color="ffff00" style="background:#ffff00"></div>
+          <div class="color-swatch" data-color="00ff00" style="background:#00ff00"></div>
+          <div class="color-swatch" data-color="00ffff" style="background:#00ffff"></div>
+          <div class="color-swatch" data-color="0000ff" style="background:#0000ff"></div>
+          <div class="color-swatch" data-color="ffffff" style="background:#ffffff"></div>
+          <div class="color-swatch" data-color="000000" style="background:#000000"></div>
+        </div>
+        <div class="hint-text">新建激光 / 滤镜默认色<br>Shift+点击改已有色</div>
+      </div>
+
+      <div class="panel">
+        <h3>地图文件</h3>
+        <div class="file-actions">
+          <button id="exportBtn">📤 导出</button>
+          <button id="importBtn">📥 导入</button>
+        </div>
+        <input type="file" id="fileInput" accept=".ls-map">
+      </div>
+    </div>
+
+    <div class="test-only">
+      <div class="panel">
+        <h3>图例</h3>
+        <div class="legend-item">
+          <div class="legend-icon">
+            <svg width="26" height="26" viewBox="0 0 30 30">
+              <line x1="6" y1="6" x2="24" y2="24" stroke="#e5f0ff" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="legend-text">
+            <strong>双面镜</strong>
+            两面都反射
+          </div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon">
+            <svg width="26" height="26" viewBox="0 0 30 30">
+              <line x1="6" y1="6" x2="24" y2="24" stroke="#e5f0ff" stroke-width="5" stroke-linecap="round"/>
+              <line x1="11" y1="13" x2="9" y2="15" stroke="#8aa4c0" stroke-width="1.5" stroke-dasharray="2,2"/>
+              <line x1="15" y1="17" x2="13" y2="19" stroke="#8aa4c0" stroke-width="1.5" stroke-dasharray="2,2"/>
+              <line x1="19" y1="21" x2="17" y2="23" stroke="#8aa4c0" stroke-width="1.5" stroke-dasharray="2,2"/>
+            </svg>
+          </div>
+          <div class="legend-text">
+            <strong>单面镜</strong>
+            光滑面反射，背面阻挡
+          </div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon">
+            <svg width="26" height="26" viewBox="0 0 30 30">
+              <polygon points="22,15 8,7 8,23" fill="#ff0000"/>
+            </svg>
+          </div>
+          <div class="legend-text">
+            <strong>激光</strong>
+            箭头方向 = 发射方向
+          </div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon">
+            <svg width="26" height="26" viewBox="0 0 30 30">
+              <circle cx="15" cy="15" r="9" fill="none" stroke="#ffb347" stroke-width="3"/>
+              <circle cx="15" cy="15" r="4" fill="#ffb347"/>
+            </svg>
+          </div>
+          <div class="legend-text">
+            <strong>接收器</strong>
+            激光击中即胜利
+          </div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-icon">
+            <svg width="26" height="26" viewBox="0 0 30 30">
+              <rect x="7" y="7" width="16" height="16" rx="2" fill="#00ffff" opacity="0.5"/>
+            </svg>
+          </div>
+          <div class="legend-text">
+            <strong>滤镜</strong>
+            输出 = (初始 + 所有滤镜) / (n+1)
+          </div>
+        </div>
+        <div class="hint-text" style="margin-top:8px; padding-top:6px; border-top:1px solid #1f2d3d;">
+          点击镜子切换朝向 · 悬浮激光线查看 HEX
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <canvas id="gameCanvas"></canvas>
+  </div>
+</div>
+
+<div class="status-bar">
+  <span id="statusText">编辑模式 · 点击格子放置元素</span>
+  <span class="win-badge" id="winBadge">🎉 命中！</span>
+</div>
+
+<div class="laser-tooltip" id="laserTooltip"></div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const statusText = document.getElementById('statusText');
+  const winBadge = document.getElementById('winBadge');
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+  const historyInfo = document.getElementById('historyInfo');
+  const laserDirPanel = document.getElementById('laserDirPanel');
+  const mirrorTypePanel = document.getElementById('mirrorTypePanel');
+  const tooltip = document.getElementById('laserTooltip');
+
+  let GRID_SIZE = 32;
+  let CANVAS_SIZE = 720;
+  let CELL_SIZE = CANVAS_SIZE / GRID_SIZE;
+
+  const DIR = {
+    UP:    { dx: 0, dy: -1, angle: -Math.PI/2 },
+    DOWN:  { dx: 0, dy: 1, angle: Math.PI/2 },
+    LEFT:  { dx: -1, dy: 0, angle: Math.PI },
+    RIGHT: { dx: 1, dy: 0, angle: 0 }
+  };
+  const DIR_ORDER = ['RIGHT', 'DOWN', 'LEFT', 'UP'];
+
+  const TWO_WAY_ORIENTATIONS = ['slash', 'backslash'];
+  const ONE_WAY_ORIENTATIONS = ['LEFT_UP', 'RIGHT_UP', 'RIGHT_DOWN', 'LEFT_DOWN'];
+
+  let mode = 'edit';
+  let activeTool = 'laser';
+  let activeColor = 'ff0000';
+  let activeMirrorKind = 'two-way';
+  let activeLaserDir = 'RIGHT';
+
+  let elements = [];
+  let laserPaths = [];
+  let win = false;
+
+  let hoverRow = -1, hoverCol = -1;
+
+  function resizeCanvas() {
+    const sidebarWidth = 250;
+    const availW = window.innerWidth - sidebarWidth;
+    const availH = window.innerHeight;
+    CANVAS_SIZE = Math.min(availW, availH);
+    CELL_SIZE = CANVAS_SIZE / GRID_SIZE;
+    canvas.width = CANVAS_SIZE;
+    canvas.height = CANVAS_SIZE;
+    canvas.style.width = CANVAS_SIZE + 'px';
+    canvas.style.height = CANVAS_SIZE + 'px';
+  }
+
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    refresh();
+  });
+
+  const history = {
+    stack: [],
+    pointer: -1,
+    maxSize: 128,
+    snapshot() {
+      return JSON.stringify({ gridSize: GRID_SIZE, elements });
+    },
+    push() {
+      this.stack = this.stack.slice(0, this.pointer + 1);
+      this.stack.push(this.snapshot());
+      if (this.stack.length > this.maxSize) this.stack.shift();
+      this.pointer = this.stack.length - 1;
+      this.updateUI();
+    },
+    undo() {
+      if (this.pointer > 0) {
+        this.pointer--;
+        const state = JSON.parse(this.stack[this.pointer]);
+        GRID_SIZE = state.gridSize;
+        resizeCanvas();
+        elements = state.elements;
+        updateSizeButtonsUI();
+        return true;
+      }
+      return false;
+    },
+    redo() {
+      if (this.pointer < this.stack.length - 1) {
+        this.pointer++;
+        const state = JSON.parse(this.stack[this.pointer]);
+        GRID_SIZE = state.gridSize;
+        resizeCanvas();
+        elements = state.elements;
+        updateSizeButtonsUI();
+        return true;
+      }
+      return false;
+    },
+    clear() {
+      this.stack = [];
+      this.pointer = -1;
+      this.push();
+    },
+    updateUI() {
+      undoBtn.disabled = this.pointer <= 0;
+      redoBtn.disabled = this.pointer >= this.stack.length - 1;
+      const total = this.stack.length;
+      const current = this.pointer + 1;
+      if (total <= 1) historyInfo.textContent = '无可撤回操作';
+      else historyInfo.textContent = `第 ${current} / ${total} 步`;
+    }
+  };
+
+  function parseHex(hex) {
+    hex = hex.replace('#','').toLowerCase();
+    return {
+      r: parseInt(hex.substring(0,2), 16),
+      g: parseInt(hex.substring(2,4), 16),
+      b: parseInt(hex.substring(4,6), 16)
+    };
+  }
+  function toHex(r,g,b) {
+    return [r,g,b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2,'0')).join('');
+  }
+  function computeOutputColor(baseColor, filterColors) {
+    const n = filterColors.length;
+    if (n === 0) return baseColor.toLowerCase().replace('#','');
+    const base = parseHex(baseColor);
+    let sumR = base.r, sumG = base.g, sumB = base.b;
+    for (const fc of filterColors) {
+      const f = parseHex(fc);
+      sumR += f.r; sumG += f.g; sumB += f.b;
+    }
+    const divisor = n + 1;
+    return toHex(sumR / divisor, sumG / divisor, sumB / divisor);
+  }
+
+  function getElementAt(row, col) {
+    return elements.find(e => e.row === row && e.col === col);
+  }
+  function removeElementAt(row, col) {
+    elements = elements.filter(e => !(e.row === row && e.col === col));
+  }
+
+  function interactMirror(mirror, dir) {
+    if (mirror.mirrorKind === 'two-way') {
+      if (mirror.orientation === 'slash') {
+        if (dir === 'RIGHT') return { blocked: false, newDir: 'UP' };
+        if (dir === 'UP')    return { blocked: false, newDir: 'RIGHT' };
+        if (dir === 'LEFT')  return { blocked: false, newDir: 'DOWN' };
+        if (dir === 'DOWN')  return { blocked: false, newDir: 'LEFT' };
+      } else {
+        if (dir === 'RIGHT') return { blocked: false, newDir: 'DOWN' };
+        if (dir === 'DOWN')  return { blocked: false, newDir: 'RIGHT' };
+        if (dir === 'LEFT')  return { blocked: false, newDir: 'UP' };
+        if (dir === 'UP')    return { blocked: false, newDir: 'LEFT' };
+      }
+    } else {
+      const o = mirror.orientation;
+      if (o === 'LEFT_UP') {
+        if (dir === 'RIGHT') return { blocked: false, newDir: 'UP' };
+        if (dir === 'DOWN')  return { blocked: false, newDir: 'LEFT' };
+        if (dir === 'LEFT')  return { blocked: true };
+        if (dir === 'UP')    return { blocked: true };
+      }
+      else if (o === 'LEFT_DOWN') {
+        if (dir === 'RIGHT') return { blocked: false, newDir: 'DOWN' };
+        if (dir === 'UP')    return { blocked: false, newDir: 'LEFT' };
+        if (dir === 'LEFT')  return { blocked: true };
+        if (dir === 'DOWN')  return { blocked: true };
+      }
+      else if (o === 'RIGHT_UP') {
+        if (dir === 'LEFT')  return { blocked: false, newDir: 'UP' };
+        if (dir === 'DOWN')  return { blocked: false, newDir: 'RIGHT' };
+        if (dir === 'RIGHT') return { blocked: true };
+        if (dir === 'UP')    return { blocked: true };
+      }
+      else if (o === 'RIGHT_DOWN') {
+        if (dir === 'LEFT')  return { blocked: false, newDir: 'DOWN' };
+        if (dir === 'UP')    return { blocked: false, newDir: 'RIGHT' };
+        if (dir === 'RIGHT') return { blocked: true };
+        if (dir === 'DOWN')  return { blocked: true };
+      }
+    }
+    return { blocked: false, newDir: dir };
+  }
+
+  function traceBeam(laser) {
+    const path = [];
+    const baseColor = (laser.color || 'ff0000').toLowerCase().replace('#','');
+    let row = laser.row, col = laser.col;
+    let dir = laser.dir || 'RIGHT';
+    const filterColors = [];
+    const visited = new Set();
+    let hitReceiver = false;
+    let finalColor = baseColor;
+
+    path.push({ row, col, color: '#' + baseColor });
+
+    let steps = 0;
+    const MAX_STEPS = GRID_SIZE * GRID_SIZE * 4;
+
+    while (steps++ < MAX_STEPS) {
+      const stateKey = `${row},${col},${dir},${baseColor},${filterColors.join(',')}`;
+      if (visited.has(stateKey)) break;
+      visited.add(stateKey);
+
+      const delta = DIR[dir];
+      const nextRow = row + delta.dy;
+      const nextCol = col + delta.dx;
+
+      if (nextRow < 0 || nextRow >= GRID_SIZE || nextCol < 0 || nextCol >= GRID_SIZE) break;
+
+      row = nextRow;
+      col = nextCol;
+
+      const elem = getElementAt(row, col);
+
+      if (elem && elem.type === 'filter') {
+        filterColors.push(elem.color || 'ffffff');
+      }
+
+      const currentColor = computeOutputColor(baseColor, filterColors);
+      finalColor = currentColor;
+      path.push({ row, col, color: '#' + currentColor });
+
+      if (elem && elem.type === 'receiver') {
+        hitReceiver = true;
+        break;
+      }
+
+      if (elem && elem.type === 'mirror') {
+        const result = interactMirror(elem, dir);
+        if (result.blocked) break;
+        dir = result.newDir;
+      }
+    }
+
+    return { path, hitReceiver, finalColor };
+  }
+
+  function computeLaser() {
+    laserPaths = [];
+    win = false;
+    winBadge.classList.remove('show');
+
+    const lasers = elements.filter(e => e.type === 'laser');
+    if (lasers.length === 0) {
+      statusText.textContent = mode === 'edit' ? '编辑模式 · 请放置激光发射器' : '测试模式 · 请先编辑地图';
+      return;
+    }
+
+    let anyHit = false;
+    let lastFinalColor = null;
+
+    for (const laser of lasers) {
+      const result = traceBeam(laser);
+      if (result.path.length > 0) laserPaths.push(result.path);
+      if (result.hitReceiver) {
+        anyHit = true;
+        lastFinalColor = result.finalColor;
+      }
+    }
+
+    if (anyHit) {
+      win = true;
+      winBadge.classList.add('show');
+      statusText.textContent = `🎉 命中接收器！输出颜色 #${lastFinalColor}`;
+    } else {
+      statusText.textContent = mode === 'edit' 
+        ? `编辑模式 · 激光路径预览` 
+        : '测试模式 · 点击镜子切换朝向';
+    }
+  }
+
+  function drawMirror(cx, cy, mirror) {
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    const half = CELL_SIZE * 0.35;
+    let isSlash;
+    let backDirX = 0, backDirY = 0;
+
+    if (mirror.mirrorKind === 'two-way') {
+      isSlash = mirror.orientation === 'slash';
+    } else {
+      const o = mirror.orientation;
+      if (o === 'LEFT_UP') {
+        isSlash = true;
+        backDirX = 1/Math.sqrt(2); backDirY = 1/Math.sqrt(2);
+      }
+      else if (o === 'RIGHT_UP') {
+        isSlash = false;
+        backDirX = -1/Math.sqrt(2); backDirY = 1/Math.sqrt(2);
+      }
+      else if (o === 'RIGHT_DOWN') {
+        isSlash = true;
+        backDirX = -1/Math.sqrt(2); backDirY = -1/Math.sqrt(2);
+      }
+      else {
+        isSlash = false;
+        backDirX = 1/Math.sqrt(2); backDirY = -1/Math.sqrt(2);
+      }
+    }
+
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = '#cce4ff';
+    ctx.strokeStyle = '#e5f0ff';
+    ctx.lineWidth = Math.max(3, CELL_SIZE * 0.14);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    if (isSlash) {
+      ctx.moveTo(-half, half);
+      ctx.lineTo(half, -half);
+    } else {
+      ctx.moveTo(-half, -half);
+      ctx.lineTo(half, half);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    if (mirror.mirrorKind === 'two-way') {
+      ctx.restore();
+      return;
+    }
+
+    ctx.strokeStyle = 'rgba(140,170,210,0.8)';
+    ctx.lineWidth = Math.max(1.2, CELL_SIZE * 0.04);
+    ctx.setLineDash([3, 3]);
+
+    const baseOffset = CELL_SIZE * 0.18;
+    const lineCount = 3;
+    const spacing = CELL_SIZE * 0.05;
+
+    for (let i = 0; i < lineCount; i++) {
+      const dist = baseOffset + i * spacing;
+      const ox = backDirX * dist;
+      const oy = backDirY * dist;
+
+      const t = half * 0.65;
+      let dx1, dy1, dx2, dy2;
+      if (isSlash) {
+        dx1 = -t/Math.sqrt(2); dy1 = t/Math.sqrt(2);
+        dx2 = t/Math.sqrt(2); dy2 = -t/Math.sqrt(2);
+      } else {
+        dx1 = -t/Math.sqrt(2); dy1 = -t/Math.sqrt(2);
+        dx2 = t/Math.sqrt(2); dy2 = t/Math.sqrt(2);
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(dx1 + ox, dy1 + oy);
+      ctx.lineTo(dx2 + ox, dy2 + oy);
+      ctx.stroke();
+    }
+
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  function drawLaser(cx, cy, dir, color, highlight) {
+    const angle = DIR[dir].angle;
+    const hex = '#' + color;
+    
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    if (highlight) {
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = hex;
+      ctx.strokeStyle = hex;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.arc(0, 0, CELL_SIZE * 0.42, 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.rotate(angle);
+    ctx.shadowBlur = 22;
+    ctx.shadowColor = hex;
+    ctx.fillStyle = hex;
+    ctx.beginPath();
+    ctx.moveTo(CELL_SIZE * 0.32, 0);
+    ctx.lineTo(-CELL_SIZE * 0.16, -CELL_SIZE * 0.22);
+    ctx.lineTo(-CELL_SIZE * 0.16, CELL_SIZE * 0.22);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i <= GRID_SIZE; i++) {
+      const pos = i * CELL_SIZE;
+      ctx.strokeStyle = '#1a2633';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pos, 0); ctx.lineTo(pos, canvas.height);
+      ctx.moveTo(0, pos); ctx.lineTo(canvas.width, pos);
+      ctx.stroke();
+    }
+
+    if (mode === 'edit' && hoverRow >= 0 && hoverCol >= 0) {
+      const hx = hoverCol * CELL_SIZE;
+      const hy = hoverRow * CELL_SIZE;
+      const existing = getElementAt(hoverRow, hoverCol);
+
+      ctx.strokeStyle = activeTool === 'erase' ? '#ff6b6b' : '#4a8fe0';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(hx + 2, hy + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+      ctx.setLineDash([]);
+
+      if (activeTool === 'laser' && !existing) {
+        const cx = hx + CELL_SIZE / 2;
+        const cy = hy + CELL_SIZE / 2;
+        ctx.save();
+        ctx.globalAlpha = 0.4;
+        drawLaser(cx, cy, activeLaserDir, activeColor, false);
+        ctx.restore();
+      }
+    }
+
+    elements.forEach(elem => {
+      const x = elem.col * CELL_SIZE;
+      const y = elem.row * CELL_SIZE;
+      const cx = x + CELL_SIZE / 2;
+      const cy = y + CELL_SIZE / 2;
+
+      if (elem.type === 'laser') {
+        const highlight = (mode === 'edit' && activeTool === 'laser');
+        drawLaser(cx, cy, elem.dir || 'RIGHT', elem.color || 'ff0000', highlight);
+      } else if (elem.type === 'mirror') {
+        drawMirror(cx, cy, elem);
+      } else if (elem.type === 'receiver') {
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = win ? '#00ff88' : '#ffaa33';
+        ctx.strokeStyle = win ? '#6bff8a' : '#ffb347';
+        ctx.lineWidth = Math.max(2, CELL_SIZE * 0.08);
+        ctx.beginPath();
+        ctx.arc(cx, cy, CELL_SIZE * 0.28, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx, cy, CELL_SIZE * 0.12, 0, 2 * Math.PI);
+        ctx.fillStyle = win ? '#6bff8a' : '#ffb347';
+        ctx.fill();
+      } else if (elem.type === 'filter') {
+        const color = '#' + (elem.color || 'ffffff');
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = color;
+        ctx.fillRect(x + 5, y + 5, CELL_SIZE - 10, CELL_SIZE - 10);
+        ctx.restore();
+      }
+    });
+
+    laserPaths.forEach(path => {
+      if (path.length > 1) {
+        for (let i = 0; i < path.length - 1; i++) {
+          const p1 = path[i];
+          const p2 = path[i + 1];
+          const x1 = p1.col * CELL_SIZE + CELL_SIZE / 2;
+          const y1 = p1.row * CELL_SIZE + CELL_SIZE / 2;
+          const x2 = p2.col * CELL_SIZE + CELL_SIZE / 2;
+          const y2 = p2.row * CELL_SIZE + CELL_SIZE / 2;
+
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = p1.color;
+          ctx.strokeStyle = p1.color;
+          ctx.lineWidth = Math.max(2, CELL_SIZE * 0.13);
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+      }
+    });
+
+    ctx.shadowBlur = 0;
+  }
+
+  function refresh() {
+    computeLaser();
+    draw();
+    history.updateUI();
+  }
+
+  function updateDirPanelUI() {
+    document.querySelectorAll('#laserDirPanel .dir-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.dir === activeLaserDir);
+    });
+  }
+
+  function updateSizeButtonsUI() {
+    document.querySelectorAll('.tool-btn[data-size]').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.size) === GRID_SIZE);
+    });
+  }
+
+  function distToSegmentSq(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const lenSq = dx*dx + dy*dy;
+    let t = 0;
+    if (lenSq > 0) {
+      t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+      t = Math.max(0, Math.min(1, t));
+    }
+    const projX = x1 + t * dx;
+    const projY = y1 + t * dy;
+    const ddx = px - projX;
+    const ddy = py - projY;
+    return ddx*ddx + ddy*ddy;
+  }
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    let hoveredColor = null;
+    const thresholdSq = 12 * 12;
+    for (const path of laserPaths) {
+      if (path.length < 2) continue;
+      for (let i = 0; i < path.length - 1; i++) {
+        const p1 = path[i];
+        const p2 = path[i + 1];
+        const x1 = p1.col * CELL_SIZE + CELL_SIZE / 2;
+        const y1 = p1.row * CELL_SIZE + CELL_SIZE / 2;
+        const x2 = p2.col * CELL_SIZE + CELL_SIZE / 2;
+        const y2 = p2.row * CELL_SIZE + CELL_SIZE / 2;
+        const dSq = distToSegmentSq(mx, my, x1, y1, x2, y2);
+        if (dSq <= thresholdSq) {
+          hoveredColor = p1.color;
+          break;
+        }
+      }
+      if (hoveredColor) break;
+    }
+
+    if (hoveredColor) {
+      const hex = hoveredColor.replace('#','').toLowerCase();
+      tooltip.innerHTML = `<span class="swatch" style="background:${hoveredColor};"></span>#${hex}`;
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+      tooltip.style.display = 'block';
+    } else {
+      tooltip.style.display = 'none';
+    }
+
+    if (mode !== 'edit') {
+      if (hoverRow !== -1 || hoverCol !== -1) {
+        hoverRow = -1;
+        hoverCol = -1;
+        draw();
+      }
+      return;
+    }
+    const col = Math.floor(mx / CELL_SIZE);
+    const row = Math.floor(my / CELL_SIZE);
+
+    if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+      if (hoverRow !== row || hoverCol !== col) {
+        hoverRow = row;
+        hoverCol = col;
+        draw();
+      }
+    } else {
+      if (hoverRow !== -1) {
+        hoverRow = -1;
+        hoverCol = -1;
+        draw();
+      }
+    }
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    if (hoverRow !== -1 || hoverCol !== -1) {
+      hoverRow = -1;
+      hoverCol = -1;
+      draw();
+    }
+  });
+
+  document.querySelectorAll('#laserDirPanel .dir-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeLaserDir = btn.dataset.dir;
+      updateDirPanelUI();
+      draw();
+    });
+  });
+
+  function handleCanvasClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+    const col = Math.floor(mx / CELL_SIZE);
+    const row = Math.floor(my / CELL_SIZE);
+
+    if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return;
+
+    if (mode === 'test') {
+      const elem = getElementAt(row, col);
+      if (elem && elem.type === 'mirror') {
+        if (elem.mirrorKind === 'two-way') {
+          const idx = TWO_WAY_ORIENTATIONS.indexOf(elem.orientation);
+          elem.orientation = TWO_WAY_ORIENTATIONS[(idx + 1) % TWO_WAY_ORIENTATIONS.length];
+        } else {
+          const idx = ONE_WAY_ORIENTATIONS.indexOf(elem.orientation);
+          elem.orientation = ONE_WAY_ORIENTATIONS[(idx + 1) % ONE_WAY_ORIENTATIONS.length];
+        }
+        history.push();
+        refresh();
+      }
+      return;
+    }
+
+    if (e.shiftKey) {
+      const elem = getElementAt(row, col);
+      if (elem && (elem.type === 'laser' || elem.type === 'filter')) {
+        elem.color = activeColor;
+        history.push();
+        refresh();
+        return;
+      }
+    }
+
+    if (activeTool === 'erase') {
+      const existing = getElementAt(row, col);
+      if (existing) {
+        removeElementAt(row, col);
+        history.push();
+        refresh();
+      }
+      return;
+    }
+
+    const existing = getElementAt(row, col);
+    let changed = false;
+
+    if (activeTool === 'laser') {
+      if (existing && existing.type === 'laser') {
+        const currentIdx = DIR_ORDER.indexOf(existing.dir || 'RIGHT');
+        const nextIdx = (currentIdx + 1) % DIR_ORDER.length;
+        existing.dir = DIR_ORDER[nextIdx];
+        changed = true;
+      } else {
+        removeElementAt(row, col);
+        elements.push({ 
+          type:'laser', row, col, 
+          dir: activeLaserDir, 
+          color: activeColor 
+        });
+        changed = true;
+      }
+    } else if (activeTool === 'mirror') {
+      if (existing && existing.type === 'mirror') {
+        if (existing.mirrorKind === 'two-way') {
+          const idx = TWO_WAY_ORIENTATIONS.indexOf(existing.orientation);
+          existing.orientation = TWO_WAY_ORIENTATIONS[(idx + 1) % TWO_WAY_ORIENTATIONS.length];
+        } else {
+          const idx = ONE_WAY_ORIENTATIONS.indexOf(existing.orientation);
+          existing.orientation = ONE_WAY_ORIENTATIONS[(idx + 1) % ONE_WAY_ORIENTATIONS.length];
+        }
+        changed = true;
+      } else {
+        removeElementAt(row, col);
+        if (activeMirrorKind === 'two-way') {
+          elements.push({ 
+            type:'mirror', row, col, 
+            mirrorKind: 'two-way', 
+            orientation: 'slash' 
+          });
+        } else {
+          elements.push({ 
+            type:'mirror', row, col, 
+            mirrorKind: 'one-way', 
+            orientation: 'LEFT_UP' 
+          });
+        }
+        changed = true;
+      }
+    } else if (activeTool === 'receiver') {
+      removeElementAt(row, col);
+      elements.push({ type:'receiver', row, col });
+      changed = true;
+    } else if (activeTool === 'filter') {
+      removeElementAt(row, col);
+      elements.push({ type:'filter', row, col, color: activeColor });
+      changed = true;
+    }
+
+    if (changed) {
+      history.push();
+      refresh();
+    }
+  }
+
+  function setMode(newMode) {
+    mode = newMode;
+    if (mode === 'test') {
+      document.body.classList.add('test-mode');
+      hoverRow = -1;
+      hoverCol = -1;
+      tooltip.style.display = 'none';
+    } else {
+      document.body.classList.remove('test-mode');
+    }
+    document.getElementById('modeEdit').classList.toggle('active', mode === 'edit');
+    document.getElementById('modeEdit').classList.toggle('inactive', mode !== 'edit');
+    document.getElementById('modeTest').classList.toggle('active', mode === 'test');
+    document.getElementById('modeTest').classList.toggle('inactive', mode !== 'test');
+    canvas.style.cursor = mode === 'edit' ? 'crosshair' : 'pointer';
+    refresh();
+  }
+
+  document.getElementById('modeEdit').addEventListener('click', () => setMode('edit'));
+  document.getElementById('modeTest').addEventListener('click', () => setMode('test'));
+
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTool = btn.dataset.tool;
+      const hints = {
+        laser: '点击放置激光，再点旋转方向。Shift+点击改颜色',
+        mirror: '点击放置镜子，再点切换朝向',
+        receiver: '点击格子放置接收器',
+        filter: '点击格子放置滤镜（Shift+点击改色）',
+        erase: '点击格子删除元素'
+      };
+      document.getElementById('toolHint').textContent = hints[activeTool] || '';
+      
+      laserDirPanel.style.display = activeTool === 'laser' ? 'flex' : 'none';
+      mirrorTypePanel.style.display = activeTool === 'mirror' ? 'block' : 'none';
+      
+      draw();
+    });
+  });
+
+  document.querySelectorAll('.tool-btn[data-size]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const newSize = parseInt(btn.dataset.size);
+      if (newSize === GRID_SIZE) return;
+      
+      if (!confirm(`切换到 ${newSize} × ${newSize} 会清空当前地图，确定吗？`)) return;
+      
+      GRID_SIZE = newSize;
+      resizeCanvas();
+      elements = [];
+      updateSizeButtonsUI();
+      history.push();
+      refresh();
+    });
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    if (elements.length === 0) {
+      statusText.textContent = '地图已经是空的';
+      return;
+    }
+    if (!confirm('确定要清空当前地图吗？')) return;
+    elements = [];
+    history.push();
+    refresh();
+  });
+
+  document.querySelectorAll('.color-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      activeColor = sw.dataset.color;
+    });
+  });
+
+  document.querySelectorAll('.tool-btn[data-mirror-kind]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tool-btn[data-mirror-kind]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeMirrorKind = btn.dataset.mirrorKind;
+    });
+  });
+
+  undoBtn.addEventListener('click', () => { if (history.undo()) refresh(); });
+  redoBtn.addEventListener('click', () => { if (history.redo()) refresh(); });
+
+  document.addEventListener('keydown', (e) => {
+    const ctrl = e.ctrlKey || e.metaKey;
+    if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      if (history.undo()) refresh();
+    } else if (ctrl && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+      e.preventDefault();
+      if (history.redo()) refresh();
+    }
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const data = {
+      version: 13,
+      gridSize: GRID_SIZE,
+      elements: elements.map(e => ({
+        type: e.type, row: e.row, col: e.col,
+        dir: e.dir, color: e.color,
+        mirrorKind: e.mirrorKind, orientation: e.orientation
+      }))
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `maze-${GRID_SIZE}x${GRID_SIZE}.ls-map`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('importBtn').addEventListener('click', () => {
+    document.getElementById('fileInput').click();
+  });
+  document.getElementById('fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.elements) {
+          if (data.gridSize && data.gridSize >= 4 && data.gridSize <= 32) {
+            GRID_SIZE = data.gridSize;
+            resizeCanvas();
+          }
+          elements = data.elements.map(e => {
+            if (e.type === 'mirror' && !e.mirrorKind) {
+              return {
+                type: 'mirror', row: e.row, col: e.col,
+                mirrorKind: 'two-way',
+                orientation: 'slash'
+              };
+            }
+            return { ...e };
+          });
+          updateSizeButtonsUI();
+          history.push();
+          refresh();
+          statusText.textContent = '地图已导入';
+        }
+      } catch (err) {
+        alert('导入失败：文件格式错误');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  canvas.addEventListener('click', handleCanvasClick);
+
+  elements = [
+    { type:'laser', row: 16, col: 0, dir:'RIGHT', color:'ff0000' },
+    { type:'mirror', row: 16, col: 6, mirrorKind:'two-way', orientation:'slash' },
+    { type:'mirror', row: 6, col: 6, mirrorKind:'two-way', orientation:'backslash' },
+    { type:'mirror', row: 6, col: 16, mirrorKind:'two-way', orientation:'slash' },
+    { type:'mirror', row: 16, col: 16, mirrorKind:'two-way', orientation:'backslash' },
+    { type:'filter', row: 16, col: 22, color:'00ffff' },
+    { type:'receiver', row: 16, col: 31 }
+  ];
+
+  updateSizeButtonsUI();
+  updateDirPanelUI();
+  resizeCanvas();
+  history.clear();
+  refresh();
+})();
+</script>
+</body>
+</html>

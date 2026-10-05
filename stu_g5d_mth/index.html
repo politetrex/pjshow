@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五年级上册 · 小数乘法与除法专项练习</title>
+    <link rel="icon" href="../../../sources/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="../../../sources/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+
+    <script>
+        // 提前应用暗色模式，避免闪烁
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#93c5fd',
+                        accent: '#1d4ed8',
+                        neutral: '#f1f5f9',
+                        'neutral-dark': '#94a3b8'
+                    },
+                    fontFamily: { sans: ['Arial', 'sans-serif'] },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .card { @apply bg-white rounded-lg shadow-card p-4 transition-all duration-300 dark:bg-slate-800; }
+            .card:hover { @apply shadow-card-hover; }
+            .btn-primary { @apply bg-primary text-white px-6 py-2 rounded-lg hover:bg-accent transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50; }
+            .btn-secondary { @apply bg-secondary text-accent px-6 py-2 rounded-lg hover:bg-blue-300 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-opacity-50 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600; }
+            .btn-success { @apply bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50; }
+            .section-title { @apply text-xl font-bold text-accent mb-4 flex items-center dark:text-blue-300; }
+            .section-title i { @apply mr-2; }
+            .math-problem { @apply mb-3 p-3 bg-neutral rounded-md dark:bg-slate-700; }
+            .answer { @apply bg-green-100 text-green-800 font-medium dark:bg-green-900 dark:text-green-100; }
+            .print-info { @apply hidden; }
+            .work-space { @apply mt-2 h-28 w-full border border-dashed border-gray-300 rounded dark:border-slate-500; }
+            .problem-grid { display: grid; grid-template-columns: 3fr 3fr 4fr; gap: 1rem; }
+            .oral-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+            @media (max-width: 768px) {
+                .problem-grid { grid-template-columns: 1fr; }
+                .oral-grid { grid-template-columns: repeat(2, 1fr); }
+            }
+            /* ===== 打印时强制明亮模式 ===== */
+            @media print {
+                .no-print { @apply hidden; }
+                .print-info { @apply block text-sm text-gray-600 ml-4; }
+                .header-container { @apply flex items-center justify-between; }
+                .header-main { @apply text-left; }
+                .work-space { @apply h-32; }
+                /* 强制覆盖暗色样式 */
+                html, body { background: #ffffff !important; color: #000000 !important; }
+                .card { background: #ffffff !important; color: #000000 !important; box-shadow: none !important; }
+                .math-problem { background: #f1f5f9 !important; color: #000000 !important; }
+                .answer { background: #dcfce7 !important; color: #14532d !important; }
+                .section-title { color: #1d4ed8 !important; }
+                .work-space { border-color: #9ca3af !important; }
+                .btn-primary, .btn-secondary, .btn-success { background: #ffffff !important; color: #000000 !important; border: 1px solid #cccccc !important; }
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="mb-4 header-container">
+            <div class="header-main">
+                <h1 class="text-3xl font-bold text-accent mb-2 dark:text-blue-300">五年级上册 · 小数乘法与除法专项练习</h1>
+                <p class="text-neutral-dark dark:text-slate-400"><b><img src="../../../sources/favicon.png" style="display: inline; width: 20px; height: auto;" class="text-lg text-gray-600">林耀爱学习（主站附属应用）</b> · 口算 · 小数乘法竖式 · 小数除法竖式 · 简便运算</p>
+            </div>
+            <div class="print-info">
+                <div><i class="fa fa-calendar mr-1"></i><span id="print-date"></span></div>
+                <div><i class="fa fa-random mr-1"></i>种子: <span id="print-seed"></span></div>
+            </div>
+        </header>
+
+        <div class="card mb-6 no-print">
+            <div class="flex flex-wrap justify-between items-center">
+                <div class="flex items-center mb-4 sm:mb-0">
+                    <i class="fa fa-calendar text-primary mr-2 dark:text-blue-400"></i>
+                    <span id="current-date" class="text-lg font-medium"></span>
+                </div>
+                <div class="flex flex-wrap items-center justify-center gap-4">
+                    <div class="flex items-center">
+                        <i class="fa fa-random text-primary mr-2 dark:text-blue-400"></i>
+                        <span class="text-lg font-medium">种子: </span>
+                        <input type="number" id="seed-input" class="ml-1 text-lg font-medium font-mono border border-gray-300 rounded px-2 py-1 w-48 text-center dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100">
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="generate-btn" class="btn-primary flex items-center">
+                            <i class="fa fa-refresh mr-2"></i>重新生成
+                        </button>
+                        <button id="show-answer-btn" class="btn-success flex items-center">
+                            <i class="fa fa-check-circle mr-2"></i>显示答案
+                        </button>
+                        <button id="print-btn" class="btn-secondary flex items-center">
+                            <i class="fa fa-print mr-2"></i>打印练习
+                        </button>
+                        <button id="theme-toggle" class="btn-secondary flex items-center" title="切换明暗模式">
+                            <i id="theme-icon" class="fa fa-moon-o mr-2"></i>
+                            <span id="theme-label">暗色</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6 mb-8">
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fa fa-calculator"></i>
+                    一、口算（6道）
+                </h2>
+                <div id="oral-problems" class="oral-grid"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fa fa-times"></i>
+                    二、小数乘法竖式（3道）
+                </h2>
+                <div id="multiplication-problems" class="problem-grid"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fa fa-arrows-h"></i>
+                    三、小数除法竖式（3道）
+                </h2>
+                <div id="division-problems" class="problem-grid"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fa fa-magic"></i>
+                    四、简便运算（3道）
+                </h2>
+                <div id="simplified-problems" class="problem-grid"></div>
+            </div>
+        </div>
+
+        <div id="answer-section" class="card mb-8 hidden">
+            <h2 class="section-title">
+                <i class="fa fa-check-square-o"></i>
+                参考答案
+            </h2>
+            <div id="answers-container"></div>
+        </div>
+
+        <footer></footer><script src="../../../sources/js/copyright/copyright-parse.js" type="module"></script>
+    </div>
+
+    <script>
+        let currentSeed = 0;
+        let allAnswers = { oral: [], multiplication: [], division: [], simplified: [] };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initThemeToggle();
+            setCurrentDateAndSeed();
+            generateAllProblems();
+            document.getElementById('generate-btn').addEventListener('click', generateNewRandomSeed);
+            document.getElementById('show-answer-btn').addEventListener('click', toggleAnswers);
+            document.getElementById('print-btn').addEventListener('click', printProblems);
+            document.getElementById('seed-input').addEventListener('change', generateProblemsFromInput);
+        });
+
+        // ============ 明暗模式 ============
+        function initThemeToggle() {
+            const toggleBtn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-icon');
+            const label = document.getElementById('theme-label');
+
+            function updateUI() {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    icon.className = 'fa fa-sun-o mr-2';
+                    label.textContent = '亮色';
+                } else {
+                    icon.className = 'fa fa-moon-o mr-2';
+                    label.textContent = '暗色';
+                }
+            }
+
+            toggleBtn.addEventListener('click', function() {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                updateUI();
+            });
+
+            updateUI();
+        }
+
+        function getTodaySeed() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            return Math.floor(today.getTime() / 1000);
+        }
+
+        function getTomorrowSeed() {
+            const now = new Date();
+            const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+            return Math.floor(tomorrow.getTime() / 1000);
+        }
+
+        function setCurrentDateAndSeed() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            currentSeed = getTodaySeed();
+            const formattedDate = formatDate(today);
+            document.getElementById('current-date').textContent = formattedDate;
+            document.getElementById('seed-input').value = currentSeed;
+            document.getElementById('print-date').textContent = formattedDate;
+            document.getElementById('print-seed').textContent = currentSeed;
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}年${month}月${day}日`;
+        }
+
+        function generateProblemsFromInput() {
+            const seedInput = document.getElementById('seed-input');
+            const newSeed = parseInt(seedInput.value);
+            if (!isNaN(newSeed)) {
+                currentSeed = newSeed;
+                generateAllProblems();
+                document.getElementById('answer-section').classList.add('hidden');
+                document.getElementById('print-seed').textContent = currentSeed;
+            } else {
+                alert('请输入有效的种子数值！');
+                seedInput.value = currentSeed;
+            }
+        }
+
+        function generateNewRandomSeed() {
+            try {
+                const todaySeed = getTodaySeed();
+                const tomorrowSeed = getTomorrowSeed();
+                const seedInput = document.getElementById('seed-input');
+                const inputSeed = parseInt(seedInput.value);
+                if (inputSeed < todaySeed || inputSeed >= tomorrowSeed) {
+                    currentSeed = todaySeed;
+                } else {
+                    currentSeed = currentSeed + 1;
+                    if (currentSeed >= tomorrowSeed) { currentSeed = todaySeed; }
+                }
+                document.getElementById('seed-input').value = currentSeed;
+                document.getElementById('print-seed').textContent = currentSeed;
+                generateAllProblems();
+                document.getElementById('answer-section').classList.add('hidden');
+            } catch (error) {
+                console.error('重新生成按钮出错:', error);
+                alert('重新生成时出错，请刷新页面重试');
+            }
+        }
+
+        function toggleAnswers() {
+            const answerSection = document.getElementById('answer-section');
+            const showAnswerBtn = document.getElementById('show-answer-btn');
+            if (answerSection.classList.contains('hidden')) {
+                answerSection.classList.remove('hidden');
+                showAnswerBtn.innerHTML = '<i class="fa fa-eye-slash mr-2"></i>隐藏答案';
+                displayAllAnswers();
+            } else {
+                answerSection.classList.add('hidden');
+                showAnswerBtn.innerHTML = '<i class="fa fa-check-circle mr-2"></i>显示答案';
+            }
+        }
+
+        function displayAllAnswers() {
+            const answersContainer = document.getElementById('answers-container');
+            answersContainer.innerHTML = '';
+
+            const oralAnswersDiv = document.createElement('div');
+            oralAnswersDiv.className = 'mb-6';
+            oralAnswersDiv.innerHTML = `
+                <h3 class="text-lg font-bold text-accent mb-3 dark:text-blue-300">一、口算答案</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="oral-answers"></div>
+            `;
+            answersContainer.appendChild(oralAnswersDiv);
+            const oralAnswersContainer = document.getElementById('oral-answers');
+            allAnswers.oral.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem answer';
+                el.innerHTML = `<div class="font-medium">${index + 1}. ${item.problem} = ${item.result}</div>`;
+                oralAnswersContainer.appendChild(el);
+            });
+
+            const mulAnswersDiv = document.createElement('div');
+            mulAnswersDiv.className = 'mb-6';
+            mulAnswersDiv.innerHTML = `
+                <h3 class="text-lg font-bold text-accent mb-3 dark:text-blue-300">二、小数乘法竖式答案</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="mul-answers"></div>
+            `;
+            answersContainer.appendChild(mulAnswersDiv);
+            const mulAnswersContainer = document.getElementById('mul-answers');
+            allAnswers.multiplication.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem answer';
+                el.innerHTML = `<div class="font-medium">${index + 1}. ${item.num1} × ${item.num2} = ${item.result}</div>`;
+                mulAnswersContainer.appendChild(el);
+            });
+
+            const divAnswersDiv = document.createElement('div');
+            divAnswersDiv.className = 'mb-6';
+            divAnswersDiv.innerHTML = `
+                <h3 class="text-lg font-bold text-accent mb-3 dark:text-blue-300">三、小数除法竖式答案</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="div-answers"></div>
+            `;
+            answersContainer.appendChild(divAnswersDiv);
+            const divAnswersContainer = document.getElementById('div-answers');
+            allAnswers.division.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem answer';
+                el.innerHTML = `<div class="font-medium">${index + 1}. ${item.dividend} ÷ ${item.divisor} = ${item.quotient}</div>`;
+                divAnswersContainer.appendChild(el);
+            });
+
+            const simpAnswersDiv = document.createElement('div');
+            simpAnswersDiv.className = 'mb-6';
+            simpAnswersDiv.innerHTML = `
+                <h3 class="text-lg font-bold text-accent mb-3 dark:text-blue-300">四、简便运算答案</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="simp-answers"></div>
+            `;
+            answersContainer.appendChild(simpAnswersDiv);
+            const simpAnswersContainer = document.getElementById('simp-answers');
+            allAnswers.simplified.forEach((item, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem answer';
+                el.innerHTML = `
+                    <div class="font-medium">${index + 1}. ${item.problem} = ${item.result}</div>
+                    <div class="text-sm mt-1 text-green-700 dark:text-green-300">${item.steps || ''}</div>
+                `;
+                simpAnswersContainer.appendChild(el);
+            });
+        }
+
+        function generateAllProblems() {
+            Math.seedrandom(currentSeed.toString());
+            generateOralProblems();
+            generateMultiplicationProblems();
+            generateDivisionProblems();
+            generateSimplifiedProblems();
+        }
+
+        function formatDecimal(num) {
+            if (typeof num === 'string') num = parseFloat(num);
+            let rounded = Math.round(num * 1000) / 1000;
+            if (Number.isInteger(rounded)) return rounded.toString();
+            let str = rounded.toString();
+            if (str.includes('.')) str = str.replace(/\.?0+$/, '');
+            return str;
+        }
+
+        function randomDecimal(min, max, decimalPlaces) {
+            const range = max - min;
+            let value = min + Math.random() * range;
+            value = Math.round(value * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+            if (Number.isInteger(value)) {
+                value = value + (Math.floor(Math.random() * 9) + 1) / Math.pow(10, decimalPlaces);
+                value = Math.round(value * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
+            }
+            return formatDecimal(value);
+        }
+
+        function shuffleArray(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // ================= 一、口算题（6道：2道ab + 2道abx + 2道xy0，顺序打乱） =================
+        function generateOralProblems() {
+            const container = document.getElementById('oral-problems');
+            container.innerHTML = '';
+            allAnswers.oral = [];
+
+            const pairs = [
+                [2.5, 0.4, 1],
+                [0.25, 4, 1],
+                [1.25, 8, 10],
+                [0.8, 12.5, 10],
+                [0.5, 2, 1],
+                [0.25, 8, 2],
+                [1.25, 4, 5],
+                [0.5, 20, 10],
+                [0.4, 25, 10],
+                [2.5, 4, 10],
+                [1.25, 0.8, 1],
+                [0.75, 4, 3]
+            ];
+
+            const problemList = [];
+
+            // 2 道 a × b
+            for (let i = 0; i < 2; i++) {
+                const pair = pairs[Math.floor(Math.random() * pairs.length)];
+                const [a, b, ab] = pair;
+                problemList.push({
+                    problem: `${formatDecimal(a)} × ${formatDecimal(b)}`,
+                    result: formatDecimal(ab)
+                });
+            }
+
+            // 2 道 a × b × x
+            for (let i = 0; i < 2; i++) {
+                const pair = pairs[Math.floor(Math.random() * pairs.length)];
+                const [a, b, ab] = pair;
+                let x = randomDecimal(1, 9, 1);
+                while (parseFloat(x) === a || parseFloat(x) === b) {
+                    x = randomDecimal(1, 9, 1);
+                }
+                problemList.push({
+                    problem: `${formatDecimal(a)} × ${formatDecimal(b)} × ${x}`,
+                    result: formatDecimal(ab * parseFloat(x))
+                });
+            }
+
+            // 2 道 x × y × 0
+            for (let i = 0; i < 2; i++) {
+                let x = randomDecimal(1, 9, 1);
+                let y = randomDecimal(1, 9, 1);
+                while (parseFloat(x) === parseFloat(y)) {
+                    y = randomDecimal(1, 9, 1);
+                }
+                problemList.push({
+                    problem: `${x} × ${y} × 0`,
+                    result: '0'
+                });
+            }
+
+            // Fisher-Yates 真正打乱顺序（题型分布 2-2-2 不变）
+            const problems = shuffleArray(problemList);
+
+            problems.forEach((prob, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem';
+                el.innerHTML = `
+                    <div class="font-medium">${index + 1}. ${prob.problem} =</div>
+                `;
+                container.appendChild(el);
+                allAnswers.oral.push(prob);
+            });
+        }
+
+        // ================= 二、小数乘法竖式 =================
+        function generateMultiplicationProblems() {
+            const container = document.getElementById('multiplication-problems');
+            container.innerHTML = '';
+            allAnswers.multiplication = [];
+
+            const problems = [];
+            for (let i = 0; i < 3; i++) {
+                let num1, num2;
+                if (i === 0) {
+                    num1 = randomDecimal(1, 9, 1);
+                    num2 = randomDecimal(1, 9, 1);
+                } else if (i === 1) {
+                    num1 = randomDecimal(1, 9, 2);
+                    num2 = randomDecimal(1, 9, 1);
+                } else {
+                    num1 = randomDecimal(1, 9, 2);
+                    num2 = randomDecimal(1, 9, 2);
+                }
+                const n1 = parseFloat(num1);
+                const n2 = parseFloat(num2);
+                const product = n1 * n2;
+                const resultStr = formatDecimal(parseFloat(product.toFixed(3)));
+
+                problems.push({ num1, num2, result: resultStr });
+            }
+
+            problems.forEach((prob, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem';
+                el.innerHTML = `
+                    <div class="mb-2 font-medium">${index + 1}. ${prob.num1} × ${prob.num2} =</div>
+                    <div class="work-space"></div>
+                `;
+                container.appendChild(el);
+                allAnswers.multiplication.push(prob);
+            });
+        }
+
+        // ================= 三、小数除法竖式 =================
+        function generateDivisionProblems() {
+            const container = document.getElementById('division-problems');
+            container.innerHTML = '';
+            allAnswers.division = [];
+
+            const problems = [];
+            for (let i = 0; i < 3; i++) {
+                let dividend, divisor, quotient;
+                if (i === 0) {
+                    divisor = randomDecimal(1, 9, 1);
+                    quotient = randomDecimal(1, 9, 1);
+                    const d = parseFloat(divisor);
+                    const q = parseFloat(quotient);
+                    dividend = formatDecimal(parseFloat((d * q).toFixed(3)));
+                } else if (i === 1) {
+                    divisor = randomDecimal(1, 9, 1);
+                    quotient = randomDecimal(1, 9, 2);
+                    const d = parseFloat(divisor);
+                    const q = parseFloat(quotient);
+                    dividend = formatDecimal(parseFloat((d * q).toFixed(4)));
+                } else {
+                    divisor = randomDecimal(1, 9, 2);
+                    quotient = randomDecimal(1, 9, 1);
+                    const d = parseFloat(divisor);
+                    const q = parseFloat(quotient);
+                    dividend = formatDecimal(parseFloat((d * q).toFixed(4)));
+                }
+
+                const dNum = parseFloat(dividend);
+                const divNum = parseFloat(divisor);
+                const qNum = dNum / divNum;
+                const qStr = formatDecimal(parseFloat(qNum.toFixed(3)));
+
+                problems.push({ dividend, divisor, quotient: qStr });
+            }
+
+            problems.forEach((prob, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem';
+                el.innerHTML = `
+                    <div class="mb-2 font-medium">${index + 1}. ${prob.dividend} ÷ ${prob.divisor} =</div>
+                    <div class="work-space"></div>
+                `;
+                container.appendChild(el);
+                allAnswers.division.push(prob);
+            });
+        }
+
+        // ================= 四、简便运算 =================
+        function generateSimplifiedProblems() {
+            const container = document.getElementById('simplified-problems');
+            container.innerHTML = '';
+            allAnswers.simplified = [];
+
+            const templates = [
+                () => {
+                    const c = randomDecimal(2, 9, 1);
+                    const result = 1.25 * 0.8 * parseFloat(c);
+                    return {
+                        problem: `1.25 × 0.8 × ${c}`,
+                        result: formatDecimal(result),
+                        steps: `= (1.25 × 0.8) × ${c} = 1 × ${c} = ${formatDecimal(result)}`
+                    };
+                },
+                () => {
+                    const b = randomDecimal(1, 9, 1);
+                    const result = 0.25 * parseFloat(b) * 4;
+                    return {
+                        problem: `0.25 × ${b} × 4`,
+                        result: formatDecimal(result),
+                        steps: `= (0.25 × 4) × ${b} = 1 × ${b} = ${formatDecimal(result)}`
+                    };
+                },
+                () => {
+                    const common = randomDecimal(1, 9, 1);
+                    const result = parseFloat(common) * (2.5 + 7.5);
+                    return {
+                        problem: `${common} × 2.5 + ${common} × 7.5`,
+                        result: formatDecimal(result),
+                        steps: `= ${common} × (2.5 + 7.5) = ${common} × 10 = ${formatDecimal(result)}`
+                    };
+                },
+                () => {
+                    const common = randomDecimal(2, 9, 1);
+                    const result = parseFloat(common) * (9.9 + 0.1);
+                    return {
+                        problem: `${common} × 9.9 + ${common} × 0.1`,
+                        result: formatDecimal(result),
+                        steps: `= ${common} × (9.9 + 0.1) = ${common} × 10 = ${formatDecimal(result)}`
+                    };
+                },
+                () => {
+                    const result = 2.5 * 3.2 * 1.25;
+                    return {
+                        problem: `2.5 × 3.2 × 1.25`,
+                        result: formatDecimal(result),
+                        steps: `= (2.5 × 4) × (1.25 × 0.8) = 10 × 1 = 10`
+                    };
+                },
+                () => {
+                    const a = randomDecimal(2, 8, 1);
+                    const aNum = parseFloat(a);
+                    const b = formatDecimal(10 - aNum);
+                    const result = (aNum + parseFloat(b)) * 0.25;
+                    return {
+                        problem: `${a} × 0.25 + ${b} × 0.25`,
+                        result: formatDecimal(result),
+                        steps: `= (${a} + ${b}) × 0.25 = 10 × 0.25 = 2.5`
+                    };
+                },
+                () => {
+                    const a = randomDecimal(4, 9, 1);
+                    const result = parseFloat(a) / 0.8 / 1.25;
+                    return {
+                        problem: `${a} ÷ 0.8 ÷ 1.25`,
+                        result: formatDecimal(result),
+                        steps: `= ${a} ÷ (0.8 × 1.25) = ${a} ÷ 1 = ${formatDecimal(result)}`
+                    };
+                },
+                () => {
+                    const result = 12.5 * (8.8 - 0.8);
+                    return {
+                        problem: `12.5 × 8.8 - 12.5 × 0.8`,
+                        result: formatDecimal(result),
+                        steps: `= 12.5 × (8.8 - 0.8) = 12.5 × 8 = 100`
+                    };
+                },
+                () => {
+                    const pairs = [
+                        [0.8, 12.5, 10],
+                        [0.4, 25, 10],
+                        [2.5, 4, 10],
+                        [1.25, 8, 10],
+                        [0.25, 4, 1],
+                        [0.5, 2, 1],
+                        [1.5, 2, 3],
+                        [2.5, 8, 20],
+                        [1.25, 4, 5],
+                        [0.75, 4, 3]
+                    ];
+                    const [a, x, ax] = pairs[Math.floor(Math.random() * pairs.length)];
+                    let b = randomDecimal(1, 9, 1);
+                    while (parseFloat(b) === a) {
+                        b = randomDecimal(1, 9, 1);
+                    }
+                    const bNum = parseFloat(b);
+                    const result = (a + bNum) * x;
+                    const bx = bNum * x;
+                    return {
+                        problem: `(${formatDecimal(a)} + ${b}) × ${formatDecimal(x)}`,
+                        result: formatDecimal(result),
+                        steps: `= ${formatDecimal(a)} × ${formatDecimal(x)} + ${b} × ${formatDecimal(x)} = ${formatDecimal(ax)} + ${formatDecimal(bx)} = ${formatDecimal(result)}`
+                    };
+                }
+            ];
+
+            const shuffled = shuffleArray(templates.map((fn, i) => ({ fn, i })));
+            const chosen = [];
+            const usedIdx = new Set();
+            for (const item of shuffled) {
+                if (chosen.length >= 3) break;
+                if (!usedIdx.has(item.i)) {
+                    usedIdx.add(item.i);
+                    chosen.push(item.fn);
+                }
+            }
+
+            const problems = chosen.map(fn => fn());
+
+            problems.forEach((prob, index) => {
+                const el = document.createElement('div');
+                el.className = 'math-problem';
+                el.innerHTML = `
+                    <div class="mb-2 font-medium">${index + 1}. ${prob.problem} =</div>
+                    <div class="work-space"></div>
+                `;
+                container.appendChild(el);
+                allAnswers.simplified.push(prob);
+            });
+        }
+
+        function printProblems() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
