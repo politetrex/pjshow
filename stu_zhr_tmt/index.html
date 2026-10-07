@@ -1,728 +1,650 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>班级值日表系统</title>
-  <link rel="icon" href="./favicon.ico" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班级值日表系统</title>
+
+    <link rel="icon" href="./favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="./favicon.ico">
-  <!-- Tailwind CSS v3 -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <!-- 统一的 Tailwind 配置 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#3b82f6',
-            secondary: '#60a5fa',
-            accent: '#2563eb',
-            neutral: '#f3f4f6',
-            'neutral-dark': '#e5e7eb',
-            'highlight-bg': '#dbeafe',
-            'highlight-border': '#2563eb',
-            'duty-type-1': '#eff6ff',
-            'duty-type-2': '#f0f9ff',
-            'duty-type-3': '#fef3c7',
-            'duty-type-4': '#fef2f2',
-            'duty-type-5': '#f0fdf4',
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-          },
-          boxShadow: {
-            'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-            'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-          }
+
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../src/css/tailwind.css">
+    <link rel="stylesheet" href="../src/css/s1.css">
+
+    <script>
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <style>
+        /* ============ 值日表页面独有样式 ============ */
+        .s1-highlight-today {
+            background: var(--s1-primary) !important;
+            color: #ffffff !important;
+            font-weight: 700;
         }
-      }
-    }
-  </script>
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .content-auto {
-        content-visibility: auto;
-      }
-      .table-fixed-layout {
-        table-layout: fixed;
-      }
-      .highlight-today {
-        @apply bg-highlight-bg border-2 border-highlight-border font-bold;
-      }
-      .highlight-duty-person {
-        @apply bg-highlight-bg border-2 border-highlight-border font-bold text-accent;
-      }
-      .duty-type-1 {
-        @apply bg-duty-type-1;
-      }
-      .duty-type-2 {
-        @apply bg-duty-type-2;
-      }
-      .duty-type-3 {
-        @apply bg-duty-type-3;
-      }
-      .duty-type-4 {
-        @apply bg-duty-type-4;
-      }
-      .duty-type-5 {
-        @apply bg-duty-type-5;
-      }
-      .fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      .slide-in {
-        animation: slideIn 0.5s ease-in-out;
-      }
-      @keyframes slideIn {
-        from { transform: translateY(-20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
-    }
-  </style>
+        .dark .s1-highlight-today {
+            background: #1e40af !important;
+            color: #ffffff !important;
+        }
+        .s1-highlight-duty-person {
+            background: var(--s1-primary) !important;
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+
+        /* 值日类型背景（新旧类名兼容） */
+        .duty-type-1, .s1-duty-type-1 { background: #eff6ff; }
+        .duty-type-2, .s1-duty-type-2 { background: #f0f9ff; }
+        .duty-type-3, .s1-duty-type-3 { background: #fef3c7; }
+        .duty-type-4, .s1-duty-type-4 { background: #fef2f2; }
+        .duty-type-5, .s1-duty-type-5 { background: #f0fdf4; }
+        .dark .duty-type-1, .dark .s1-duty-type-1 { background: rgba(59,130,246,0.08); }
+        .dark .duty-type-2, .dark .s1-duty-type-2 { background: rgba(14,165,233,0.08); }
+        .dark .duty-type-3, .dark .s1-duty-type-3 { background: rgba(245,158,11,0.10); }
+        .dark .duty-type-4, .dark .s1-duty-type-4 { background: rgba(239,68,68,0.10); }
+        .dark .duty-type-5, .dark .s1-duty-type-5 { background: rgba(34,197,94,0.10); }
+
+        /* 表格基础 */
+        .s1-duty-table { width: 100%; border-collapse: collapse; }
+        .s1-duty-table th,
+        .s1-duty-table td {
+            border: 1px solid var(--s1-border);
+            padding: 0.5rem;
+            vertical-align: middle;
+        }
+        .dark .s1-duty-table th,
+        .dark .s1-duty-table td {
+            border-color: #334155;
+        }
+        .s1-duty-table th {
+            background: var(--s1-neutral);
+            font-weight: 600;
+            color: var(--s1-text);
+        }
+        .dark .s1-duty-table th {
+            background: #334155;
+            color: #e2e8f0;
+        }
+        .s1-duty-table tbody tr:hover {
+            background: rgba(59,130,246,0.05);
+        }
+        .dark .s1-duty-table tbody tr:hover {
+            background: rgba(59,130,246,0.10);
+        }
+
+        /* 任务展开框 */
+        .s1-task-full {
+            display: none;
+            position: absolute;
+            z-index: 20;
+            background: var(--s1-bg-card);
+            padding: 0.75rem;
+            border: 1px solid var(--s1-border);
+            border-radius: 0.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            max-width: 20rem;
+            white-space: normal;
+            word-break: break-word;
+            left: 0;
+            top: 100%;
+            margin-top: 0.25rem;
+            width: 300px;
+            color: var(--s1-text);
+        }
+        .s1-task-full.show { display: block; }
+
+        /* 动画 */
+        .s1-fade-in { animation: s1FadeIn 0.5s ease-in-out; }
+        @keyframes s1FadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .s1-slide-in { animation: s1SlideIn 0.5s ease-in-out; }
+        @keyframes s1SlideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* ============ 打印样式 ============ */
+        @media print {
+            /* 隐藏所有交互控件 */
+            #themeToggle,
+            #toggle-duty-view,
+            #print-btn,
+            #search-btn,
+            #prev-week,
+            #current-week,
+            #next-week,
+            #name-search,
+            .s1-btn,
+            .s1-no-print {
+                display: none !important;
+            }
+
+            /* 卡片不被分页切断 */
+            .s1-card {
+                page-break-inside: avoid;
+                margin-bottom: 12px !important;
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+            }
+
+            /* 表格：黑白打印清晰 */
+            .s1-duty-table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            .s1-duty-table th,
+            .s1-duty-table td {
+                border: 1px solid #333 !important;
+                padding: 6px 8px !important;
+                color: #000 !important;
+                background: #fff !important;
+            }
+            .s1-duty-table th {
+                background: #f3f4f6 !important;
+                font-weight: 700;
+            }
+
+            /* 值日类型背景统一为白，避免灰阶混杂 */
+            .s1-duty-type-1,
+            .s1-duty-type-2,
+            .s1-duty-type-3,
+            .s1-duty-type-4,
+            .s1-duty-type-5,
+            .duty-type-1,
+            .duty-type-2,
+            .duty-type-3,
+            .duty-type-4,
+            .duty-type-5 {
+                background: #ffffff !important;
+            }
+
+            /* 今日列/今日人员：用黑色粗边框区分，不用底色 */
+            .s1-highlight-today,
+            .s1-highlight-duty-person {
+                background: #ffffff !important;
+                color: #000 !important;
+                font-weight: 700 !important;
+                border: 2px solid #000 !important;
+            }
+
+            /* 任务展开框在打印时全部展开显示完整名称 */
+            .s1-task-full {
+                display: block !important;
+                position: static !important;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: auto !important;
+                max-width: none !important;
+                white-space: normal !important;
+                background: transparent !important;
+            }
+            .task-display {
+                display: none !important;
+            }
+
+            /* 滚动容器全部展开 */
+            .overflow-y-auto,
+            .overflow-x-auto {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            /* 隐藏滚动条 */
+            ::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* 打印时强制显示展开视图（完整一周） */
+            #compact-duty-view { display: none !important; }
+            #expanded-duty-view { display: block !important; }
+
+            /* 打印信息可见 */
+            .s1-print-info { display: block !important; }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-  <div class="container mx-auto px-4 py-8 max-w-6xl">
-    <!-- 头部卡片 -->
-    <div class="bg-white rounded-lg shadow-card p-6 mb-6 fade-in">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2"><img src="./favicon.jpg" style="display: inline; width: 40px; height: auto;">班级值日表系统 - 厦门市湖明小学2022级7班</h1>
-          <p class="text-gray-600">根据日期自动更新，清晰展示每日值日安排</p>
+<body class="bg-gray-50 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+
+        <!-- 头部卡片 -->
+        <div class="s1-card mb-6 s1-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex-1">
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2 flex items-center gap-2">
+                        <img src="./favicon.jpg" class="inline w-10 h-auto">
+                        班级值日表系统 - 厦门市湖明小学2022级7班
+                    </h1>
+                    <p class="text-gray-600 dark:text-slate-400">根据日期自动更新，清晰展示每日值日安排</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="bg-slate-100 dark:bg-slate-700 rounded-lg p-4 text-center">
+                        <p class="text-gray-600 dark:text-slate-400 text-sm">当前日期</p>
+                        <p id="current-date" class="text-2xl font-bold text-primary"></p>
+                        <p id="current-day" class="text-lg text-gray-700 dark:text-slate-300"></p>
+                    </div>
+                    <button id="themeToggle" class="s1-btn s1-btn-secondary text-sm px-3 py-2 s1-no-print" title="切换明暗模式">
+                        <i id="themeIcon" class="fa fa-moon-o"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 打印专用信息（屏幕隐藏，打印显示） -->
+            <div class="s1-print-info hidden mt-3 text-sm text-gray-600">
+                <div><i class="fa fa-calendar mr-1"></i>打印日期：<span id="print-date"></span></div>
+            </div>
         </div>
-        <div class="mt-4 md:mt-0">
-          <div class="bg-neutral rounded-lg p-4 text-center">
-            <p class="text-gray-600 text-sm">当前日期</p>
-            <p id="current-date" class="text-2xl font-bold text-primary"></p>
-            <p id="current-day" class="text-lg text-gray-700"></p>
-          </div>
+
+        <!-- 值日表卡片 -->
+        <div id="duty-card" class="s1-card mb-6 s1-slide-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                <h2 class="s1-title mb-0">
+                    <i class="fa fa-calendar-check-o"></i>值日安排
+                </h2>
+                <div class="flex items-center gap-2 w-full md:w-auto s1-no-print">
+                    <div class="relative flex-grow md:flex-grow-0">
+                        <input type="text" id="name-search" placeholder="搜索姓名..."
+                               class="border border-gray-300 dark:border-slate-600 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-40 dark:bg-slate-700 dark:text-slate-100">
+                        <button id="search-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+                    <button id="toggle-duty-view" class="s1-btn s1-btn-primary whitespace-nowrap">
+                        <i class="fa fa-expand mr-1"></i> 展开
+                    </button>
+                    <button id="print-btn" class="s1-btn s1-btn-secondary whitespace-nowrap">
+                        <i class="fa fa-print mr-1"></i> 打印
+                    </button>
+                </div>
+            </div>
+
+            <!-- 紧凑视图（三天） -->
+            <div id="compact-duty-view">
+                <div class="overflow-x-auto overflow-y-auto max-h-[500px]">
+                    <table class="s1-duty-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left w-1/4">任务</th>
+                                <th id="yesterday-header" class="text-center w-1/4"></th>
+                                <th id="today-header" class="text-center w-1/4"></th>
+                                <th id="tomorrow-header" class="text-center w-1/4"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="compact-duty-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 展开视图（五天） -->
+            <div id="expanded-duty-view" class="hidden">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-2 s1-no-print">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-slate-300">本周值日安排</h3>
+                    <div class="flex gap-2">
+                        <button id="prev-week" class="s1-btn s1-btn-secondary text-sm px-3 py-1">
+                            <i class="fa fa-chevron-left"></i> 上一周
+                        </button>
+                        <button id="current-week" class="s1-btn s1-btn-primary text-sm px-3 py-1">
+                            本周
+                        </button>
+                        <button id="next-week" class="s1-btn s1-btn-secondary text-sm px-3 py-1">
+                            下一周 <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto overflow-y-auto max-h-[500px]">
+                    <table class="s1-duty-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left w-1/6">任务</th>
+                                <th id="monday-header" class="text-center w-1/6">周一</th>
+                                <th id="tuesday-header" class="text-center w-1/6">周二</th>
+                                <th id="wednesday-header" class="text-center w-1/6">周三</th>
+                                <th id="thursday-header" class="text-center w-1/6">周四</th>
+                                <th id="friday-header" class="text-center w-1/6">周五</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expanded-duty-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- 值日规则说明卡片 -->
+        <div class="s1-card s1-fade-in">
+            <h2 class="s1-title">
+                <i class="fa fa-info-circle"></i>值日规则说明
+            </h2>
+            <ol class="text-gray-700 dark:text-slate-300 space-y-2 text-sm list-decimal pl-5">
+                <li>上午值日在早读8:05分、第三节下课后完成，下午值日在第一节延时后进行。不管上下午都要整组完成后一起排队出校。</li>
+                <li>每天的课间卫生和垃圾分类由劳动委员（陈梓毅、柏苡、许亦晴）和当天卫生小组长一起负责。每日认真值日的同学可以获得劳动委员奖励。如果当天卫生扣分，整组值日生多值日一天。</li>
+                <li>劳动委员和卫生小组长还要负责早读（8:05）和午休（2:10）的班级卫生检查，保证地板无纸屑，桌椅排整齐。</li>
+            </ol>
+        </div>
     </div>
 
-    <!-- 值日表卡片 -->
-    <div id="duty-card" class="bg-white rounded-lg shadow-card p-6 mb-6 slide-in">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-        <h2 class="text-xl font-bold text-gray-800 flex items-center">
-          <i class="fa fa-calendar-check-o text-primary mr-2"></i>值日安排
-        </h2>
-        <div class="flex items-center space-x-2 w-full md:w-auto">
-          <div class="relative flex-grow md:flex-grow-0">
-            <input type="text" id="name-search" placeholder="搜索姓名..." class="border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-primary w-full md:w-40">
-            <button id="search-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-primary">
-              <i class="fa fa-search"></i>
-            </button>
-          </div>
-          <button id="toggle-duty-view" class="bg-primary hover:bg-accent text-white px-3 py-1 rounded-md transition-colors flex items-center whitespace-nowrap">
-            <i class="fa fa-expand mr-1"></i> 展开
-          </button>
-        </div>
-      </div>
-      
-      <!-- 紧凑视图（三天） -->
-      <div id="compact-duty-view">
-        <div class="overflow-x-scroll overflow-y-auto max-h-[500px] whitespace-nowrap">
-          <table class="w-full border-collapse">
-            <thead>
-              <tr>
-                <th class="p-2 text-left w-1/4">任务</th>
-                <th id="yesterday-header" class="p-2 text-center w-1/4"></th>
-                <th id="today-header" class="p-2 text-center w-1/4"></th>
-                <th id="tomorrow-header" class="p-2 text-center w-1/4"></th>
-              </tr>
-            </thead>
-            <tbody id="compact-duty-body">
-              <!-- 紧凑视图内容将通过JavaScript动态生成 -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      <!-- 展开视图（五天） -->
-      <div id="expanded-duty-view" class="hidden">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-lg font-semibold text-gray-700">本周值日安排</h3>
-          <div class="flex space-x-2">
-            <button id="prev-week" class="bg-neutral hover:bg-neutral-dark text-gray-700 px-3 py-1 rounded-md transition-colors text-sm">
-              <i class="fa fa-chevron-left"></i> 上一周
-            </button>
-            <button id="current-week" class="bg-primary hover:bg-accent text-white px-3 py-1 rounded-md transition-colors text-sm">
-              本周
-            </button>
-            <button id="next-week" class="bg-neutral hover:bg-neutral-dark text-gray-700 px-3 py-1 rounded-md transition-colors text-sm">
-              下一周 <i class="fa fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-        <div class="overflow-x-scroll overflow-y-auto max-h-[500px] whitespace-nowrap">
-          <table class="w-full border-collapse">
-            <thead>
-              <tr>
-                <th class="p-2 text-left w-1/6">任务</th>
-                <th id="monday-header" class="p-2 text-center w-1/6">周一</th>
-                <th id="tuesday-header" class="p-2 text-center w-1/6">周二</th>
-                <th id="wednesday-header" class="p-2 text-center w-1/6">周三</th>
-                <th id="thursday-header" class="p-2 text-center w-1/6">周四</th>
-                <th id="friday-header" class="p-2 text-center w-1/6">周五</th>
-              </tr>
-            </thead>
-            <tbody id="expanded-duty-body">
-              <!-- 展开视图内容将通过JavaScript动态生成 -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+<script type="module">
+import {dutyData} from "./duties.js"
 
+const now = new Date();
+let currentDate = new Date(now);
+let displayWeekOffset = 0;
 
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = document.getElementById('themeIcon');
+function initThemeIcon() {
+    const isDark = document.documentElement.classList.contains('dark');
+    themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
+}
+themeToggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    const isDark = document.documentElement.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    initThemeIcon();
+});
+initThemeIcon();
 
-    <!-- 值日规则说明卡片 -->
-    <div class="bg-white rounded-lg shadow-card p-6 fade-in">
-      <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
-        <i class="fa fa-info-circle text-primary mr-2"></i>值日规则说明
-      </h2>
-      <ol class="text-gray-700 space-y-2 text-sm" style="list-style-type: decimal">
-        <li>上午值日在早读8；05分、第三节下课后完成，下午值日在第一节延时后进行。不管上下午都要整组完成后一起排队出校。</li>
-        <li>每天的课间卫生和垃圾分类由劳动委员（陈梓毅、柏苡、许亦晴）和当天卫生小组长一起负责。每日认真值日的同学可以获得劳动委员奖励。如果当天卫生扣分，整组值日生多值日一天。</li>
-        <li>劳动委员和卫生小组长还要负责早读（8:05）和午休（2:10）的班级卫生检查，保证地板无纸屑，桌椅排整齐。</li>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import {dutyData} from "./duties.js"
-    
-    // 获取当前日期信息
-    const now = new Date();
-    let currentDate = new Date(now);
-    let displayWeekOffset = 0; // 0表示当前周，-1表示上一周，1表示下一周，以此类推
-
-    // 格式化日期为 YYYY-MM-DD
-    function formatDate(date) {
-      return date.toISOString().split('T')[0];
-    }
-
-    // 获取日期对应的星期几（0-6，0表示星期日）
-    function getDayOfWeek(date) {
-      return date.getDay();
-    }
-
-    // 获取本周的开始日期（星期一）
-    function getWeekStart(date) {
-      const day = date.getDay();
-      const diff = date.getDate() - day + (day === 0 ? -6 : 1); // 调整为星期一为一周的开始
-      return new Date(date.setDate(diff));
-    }
-
-    // 获取指定周的日期范围
-    function getWeekDates(weekOffset) {
-      const weekStart = getWeekStart(new Date(currentDate));
-      weekStart.setDate(weekStart.getDate() + weekOffset * 7);
-      
-      const weekDates = [];
-      for (let i = 0; i < 5; i++) { // 只获取周一到周五
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+function getDayOfWeek(date) {
+    return date.getDay();
+}
+function getWeekStart(date) {
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(date.setDate(diff));
+}
+function getWeekDates(weekOffset) {
+    const weekStart = getWeekStart(new Date(currentDate));
+    weekStart.setDate(weekStart.getDate() + weekOffset * 7);
+    const weekDates = [];
+    for (let i = 0; i < 5; i++) {
         const date = new Date(weekStart);
         date.setDate(weekStart.getDate() + i);
         weekDates.push(date);
-      }
-      
-      return weekDates;
     }
+    return weekDates;
+}
+function updateCurrentDateDisplay() {
+    const dateElement = document.getElementById('current-date');
+    const dayElement = document.getElementById('current-day');
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const dayOptions = { weekday: 'long' };
+    dateElement.textContent = currentDate.toLocaleDateString('zh-CN', options);
+    dayElement.textContent = currentDate.toLocaleDateString('zh-CN', dayOptions);
+}
 
-    // 更新当前日期显示
-    function updateCurrentDateDisplay() {
-      const dateElement = document.getElementById('current-date');
-      const dayElement = document.getElementById('current-day');
-      
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      const dayOptions = { weekday: 'long' };
-      
-      dateElement.textContent = currentDate.toLocaleDateString('zh-CN', options);
-      dayElement.textContent = currentDate.toLocaleDateString('zh-CN', dayOptions);
-    }
+// 生成任务名称单元格（含展开/收起）
+function createTaskCell(taskName) {
+    const taskCell = document.createElement('td');
+    taskCell.className = 'font-medium relative';
+    const maxLength = 8;
+    const isLongTask = taskName.length > maxLength;
+    const displayName = isLongTask ? taskName.substring(0, maxLength) + '...' : taskName;
 
-    // 获取指定日期的值日信息
-    function getDutyByDate(date) {
-      const dayIndex = getDayOfWeek(date) - 1; // 转换为0-4，对应周一到周五
-      
-      if (dayIndex < 0 || dayIndex > 4) {
-        return []; // 周末没有值日
-      }
-      
-      return dutyData.map(duty => {
-        return {
-          type: duty.type,
-          person: duty.members[dayIndex],
-          typeClass: duty.typeClass
-        };
-      });
-    }
-
-    // 更新三天值日概览显示（紧凑视图）
-    function updateThreeDayDutyDisplay() {
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-      
-      // 更新表头
-      const dateOptions = { month: 'numeric', day: 'numeric', weekday: 'short' };
-      document.getElementById('yesterday-header').textContent = `昨天 (${yesterday.toLocaleDateString('zh-CN', dateOptions)})`;
-      document.getElementById('today-header').textContent = `今天 (${today.toLocaleDateString('zh-CN', dateOptions)})`;
-      document.getElementById('tomorrow-header').textContent = `明天 (${tomorrow.toLocaleDateString('zh-CN', dateOptions)})`;
-      
-      // 更新表格内容
-      const tableBody = document.getElementById('compact-duty-body');
-      tableBody.innerHTML = '';
-      
-      // 为每个任务创建一行
-      dutyData.forEach(duty => {
-        const row = document.createElement('tr');
-        row.className = `${duty.typeClass} hover:bg-gray-50 transition-colors`;
-        
-        // 任务名称单元格
-        const taskCell = document.createElement('td');
-        taskCell.className = 'border border-gray-300 p-2 font-medium relative';
-        
-        // 限制任务名称显示长度
-        const taskName = duty.type;
-        const maxLength = 8;
-        const isLongTask = taskName.length > maxLength;
-        const displayName = isLongTask ? taskName.substring(0, maxLength) + '...' : taskName;
-        
+    if (isLongTask) {
         taskCell.innerHTML = `
-          <span class="task-display cursor-pointer">${displayName}</span>
-          ${isLongTask ? `<span class="task-full hidden absolute z-10 bg-white p-3 border border-gray-300 rounded shadow-lg max-w-md whitespace-normal break-words left-0 top-full mt-1 w-[300px]">${taskName}</span>` : ''}
+            <span class="task-display cursor-pointer">${displayName}</span>
+            <span class="s1-task-full">${taskName}</span>
         `;
-        
-        // 添加展开/收起功能
-        if (isLongTask) {
-          const fullTask = taskCell.querySelector('.task-full');
-          const taskDisplay = taskCell.querySelector('.task-display');
-          
-          // 点击任务名称切换展开/收起状态
-          taskDisplay.addEventListener('click', function() {
-            if (fullTask.classList.contains('hidden')) {
-              fullTask.classList.remove('hidden');
-              // 添加提示
-              const tooltip = document.createElement('div');
-              tooltip.className = 'absolute top-full left-0 mt-1 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 transition-opacity duration-300';
-              tooltip.textContent = '点击任意位置收起';
-              tooltip.id = 'task-tooltip';
-              taskCell.appendChild(tooltip);
-              
-              // 延迟显示提示
-              setTimeout(() => {
-                tooltip.classList.add('opacity-100');
-              }, 300);
-              
-              // 3秒后自动隐藏提示
-              setTimeout(() => {
-                tooltip.classList.remove('opacity-100');
-                setTimeout(() => {
-                  if (tooltip.parentNode) {
-                    tooltip.parentNode.removeChild(tooltip);
-                  }
-                }, 300);
-              }, 3000);
-              
-              // 5秒后自动收起展开框
-              setTimeout(() => {
-                if (!fullTask.classList.contains('hidden')) {
-                  fullTask.classList.add('hidden');
-                  // 移除提示
-                  const tooltip = document.getElementById('task-tooltip');
-                  if (tooltip && tooltip.parentNode) {
-                    tooltip.parentNode.removeChild(tooltip);
-                  }
-                }
-              }, 5000);
-            } else {
-              fullTask.classList.add('hidden');
-              // 移除提示
-              const tooltip = document.getElementById('task-tooltip');
-              if (tooltip && tooltip.parentNode) {
-                tooltip.parentNode.removeChild(tooltip);
-              }
-            }
-          });
-          
-          // 点击完整任务名称也可以收起
-          fullTask.addEventListener('click', function() {
-            fullTask.classList.add('hidden');
-            // 移除提示
-            const tooltip = document.getElementById('task-tooltip');
-            if (tooltip && tooltip.parentNode) {
-              tooltip.parentNode.removeChild(tooltip);
-            }
-          });
-        }
-        
-        row.appendChild(taskCell);
-        
-        // 昨天、今天、明天的值日人员单元格
-        [yesterday, today, tomorrow].forEach((date, index) => {
-          const cell = document.createElement('td');
-          cell.className = 'border border-gray-300 p-2 text-center';
-          
-          const dayIndex = getDayOfWeek(date) - 1;
-          if (dayIndex < 0 || dayIndex > 4) {
-            cell.textContent = '周末';
-            cell.className += ' text-gray-500';
-          } else {
-            // 处理多人值日的情况，将换行符转换为<br>标签
-            const person = duty.members[dayIndex];
-            const formattedPerson = person.replace(/\n/g, '<br>');
-            cell.innerHTML = formattedPerson;
-            
-            // 高亮今天的单元格
-            if (index === 1) {
-              cell.className += ' highlight-today';
-            }
-          }
-          
-          row.appendChild(cell);
+        const fullTask = taskCell.querySelector('.s1-task-full');
+        const taskDisplay = taskCell.querySelector('.task-display');
+        taskDisplay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fullTask.classList.toggle('show');
         });
-        
-        tableBody.appendChild(row);
-      });
+        fullTask.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fullTask.classList.remove('show');
+        });
+    } else {
+        taskCell.textContent = displayName;
     }
+    return taskCell;
+}
 
-    // 更新展开视图显示（完整五天值日表）
-    function updateExpandedDutyDisplay() {
-      const tableBody = document.getElementById('expanded-duty-body');
-      const weekDates = getWeekDates(displayWeekOffset);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      // 更新表头中的日期显示
-      const headers = ['monday-header', 'tuesday-header', 'wednesday-header', 'thursday-header', 'friday-header'];
-      const dayNames = ['周一', '周二', '周三', '周四', '周五'];
-      
-      headers.forEach((headerId, index) => {
+// 紧凑视图（三天）
+function updateThreeDayDutyDisplay() {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const dateOptions = { month: 'numeric', day: 'numeric', weekday: 'short' };
+    document.getElementById('yesterday-header').textContent = `昨天 (${yesterday.toLocaleDateString('zh-CN', dateOptions)})`;
+    document.getElementById('today-header').textContent = `今天 (${today.toLocaleDateString('zh-CN', dateOptions)})`;
+    document.getElementById('tomorrow-header').textContent = `明天 (${tomorrow.toLocaleDateString('zh-CN', dateOptions)})`;
+
+    const tableBody = document.getElementById('compact-duty-body');
+    tableBody.innerHTML = '';
+
+    dutyData.forEach(duty => {
+        const row = document.createElement('tr');
+        row.className = `${duty.typeClass}`;
+
+        const taskCell = createTaskCell(duty.type);
+        row.appendChild(taskCell);
+
+        [yesterday, today, tomorrow].forEach((date, index) => {
+            const cell = document.createElement('td');
+            cell.className = 'text-center';
+            const dayIndex = getDayOfWeek(date) - 1;
+            if (dayIndex < 0 || dayIndex > 4) {
+                cell.textContent = '周末';
+                cell.classList.add('text-gray-500', 'dark:text-slate-500');
+            } else {
+                const person = duty.members[dayIndex];
+                cell.innerHTML = person.replace(/\n/g, '<br>');
+                if (index === 1) cell.classList.add('s1-highlight-today');
+            }
+            row.appendChild(cell);
+        });
+
+        tableBody.appendChild(row);
+    });
+}
+
+// 展开视图（五天）
+function updateExpandedDutyDisplay() {
+    const tableBody = document.getElementById('expanded-duty-body');
+    const weekDates = getWeekDates(displayWeekOffset);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const headers = ['monday-header', 'tuesday-header', 'wednesday-header', 'thursday-header', 'friday-header'];
+    const dayNames = ['周一', '周二', '周三', '周四', '周五'];
+
+    headers.forEach((headerId, index) => {
         const header = document.getElementById(headerId);
         const date = weekDates[index];
         const shortDate = `${date.getMonth() + 1}/${date.getDate()}`;
-        
         header.innerHTML = `
-          <div class="text-center">
-            <div>${shortDate}</div>
-            <div class="text-sm text-gray-500">${dayNames[index]}</div>
-          </div>
+            <div class="text-center">
+                <div>${shortDate}</div>
+                <div class="text-sm text-gray-500 dark:text-slate-400">${dayNames[index]}</div>
+            </div>
         `;
-        
-        // 高亮今天的表头
         date.setHours(0, 0, 0, 0);
         if (date.getTime() === today.getTime()) {
-          header.className = 'p-2 text-center w-1/6 highlight-today';
+            header.classList.add('s1-highlight-today');
         } else {
-          header.className = 'p-2 text-center w-1/6';
+            header.classList.remove('s1-highlight-today');
         }
-      });
-      
-      tableBody.innerHTML = '';
-      
-      // 为每个任务创建一行
-      dutyData.forEach(duty => {
-        const row = document.createElement('tr');
-        row.className = `${duty.typeClass} hover:bg-gray-50 transition-colors`;
-        
-        // 任务名称单元格
-        const taskCell = document.createElement('td');
-        taskCell.className = 'border border-gray-300 p-2 font-medium relative';
-        
-        // 限制任务名称显示长度
-        const taskName = duty.type;
-        const maxLength = 8;
-        const isLongTask = taskName.length > maxLength;
-        const displayName = isLongTask ? taskName.substring(0, maxLength) + '...' : taskName;
-        
-        taskCell.innerHTML = `
-          <span class="task-display cursor-pointer">${displayName}</span>
-          ${isLongTask ? `<span class="task-full hidden absolute z-10 bg-white p-3 border border-gray-300 rounded shadow-lg max-w-md whitespace-normal break-words left-0 top-full mt-1 w-[300px]">${taskName}</span>` : ''}
-        `;
-        
-        // 添加展开/收起功能
-        if (isLongTask) {
-          const fullTask = taskCell.querySelector('.task-full');
-          const taskDisplay = taskCell.querySelector('.task-display');
-          
-          // 点击任务名称切换展开/收起状态
-          taskDisplay.addEventListener('click', function() {
-            if (fullTask.classList.contains('hidden')) {
-              fullTask.classList.remove('hidden');
-              // 添加提示
-              const tooltip = document.createElement('div');
-              tooltip.className = 'absolute top-full left-0 mt-1 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 transition-opacity duration-300';
-              tooltip.textContent = '点击任意位置收起';
-              tooltip.id = 'task-tooltip';
-              taskCell.appendChild(tooltip);
-              
-              // 延迟显示提示
-              setTimeout(() => {
-                tooltip.classList.add('opacity-100');
-              }, 300);
-              
-              // 3秒后自动隐藏提示
-              setTimeout(() => {
-                tooltip.classList.remove('opacity-100');
-                setTimeout(() => {
-                  if (tooltip.parentNode) {
-                    tooltip.parentNode.removeChild(tooltip);
-                  }
-                }, 300);
-              }, 3000);
-              
-              // 5秒后自动收起展开框
-              setTimeout(() => {
-                if (!fullTask.classList.contains('hidden')) {
-                  fullTask.classList.add('hidden');
-                  // 移除提示
-                  const tooltip = document.getElementById('task-tooltip');
-                  if (tooltip && tooltip.parentNode) {
-                    tooltip.parentNode.removeChild(tooltip);
-                  }
-                }
-              }, 5000);
-            } else {
-              fullTask.classList.add('hidden');
-              // 移除提示
-              const tooltip = document.getElementById('task-tooltip');
-              if (tooltip && tooltip.parentNode) {
-                tooltip.parentNode.removeChild(tooltip);
-              }
-            }
-          });
-          
-          // 点击完整任务名称也可以收起
-          fullTask.addEventListener('click', function() {
-            fullTask.classList.add('hidden');
-            // 移除提示
-            const tooltip = document.getElementById('task-tooltip');
-            if (tooltip && tooltip.parentNode) {
-              tooltip.parentNode.removeChild(tooltip);
-            }
-          });
-        }
-        
-        row.appendChild(taskCell);
-        
-        // 周一到周五的值日人员单元格
-        duty.members.forEach((member, index) => {
-          const cell = document.createElement('td');
-          cell.className = 'border border-gray-300 p-2 text-center';
-          
-          // 处理多人值日的情况，将换行符转换为<br>标签
-          const formattedMember = member.replace(/\n/g, '<br>');
-          cell.innerHTML = formattedMember;
-          
-          // 高亮今天的单元格
-          const cellDate = weekDates[index];
-          cellDate.setHours(0, 0, 0, 0);
-          if (cellDate.getTime() === today.getTime()) {
-            cell.className += ' highlight-today';
-          }
-          
-          row.appendChild(cell);
-        });
-        
-        tableBody.appendChild(row);
-      });
-    }
+    });
 
-    // 切换展开/收起视图
-    function toggleDutyView() {
-      const compactView = document.getElementById('compact-duty-view');
-      const expandedView = document.getElementById('expanded-duty-view');
-      const toggleButton = document.getElementById('toggle-duty-view');
-      
-      if (compactView.classList.contains('hidden')) {
-        // 切换到紧凑视图
+    tableBody.innerHTML = '';
+
+    dutyData.forEach(duty => {
+        const row = document.createElement('tr');
+        row.className = `${duty.typeClass}`;
+
+        const taskCell = createTaskCell(duty.type);
+        row.appendChild(taskCell);
+
+        duty.members.forEach((member, index) => {
+            const cell = document.createElement('td');
+            cell.className = 'text-center';
+            cell.innerHTML = member.replace(/\n/g, '<br>');
+            const cellDate = weekDates[index];
+            cellDate.setHours(0, 0, 0, 0);
+            if (cellDate.getTime() === today.getTime()) {
+                cell.classList.add('s1-highlight-today');
+            }
+            row.appendChild(cell);
+        });
+
+        tableBody.appendChild(row);
+    });
+}
+
+function toggleDutyView() {
+    const compactView = document.getElementById('compact-duty-view');
+    const expandedView = document.getElementById('expanded-duty-view');
+    const toggleButton = document.getElementById('toggle-duty-view');
+
+    if (compactView.classList.contains('hidden')) {
         compactView.classList.remove('hidden');
         expandedView.classList.add('hidden');
         toggleButton.innerHTML = '<i class="fa fa-expand mr-1"></i> 展开';
-      } else {
-        // 切换到展开视图
+    } else {
         compactView.classList.add('hidden');
         expandedView.classList.remove('hidden');
         toggleButton.innerHTML = '<i class="fa fa-compress mr-1"></i> 收起';
-        // 更新展开视图内容
         updateExpandedDutyDisplay();
-      }
+    }
+}
+
+function setupSearchFunctionality() {
+    const searchInput = document.getElementById('name-search');
+    const searchBtn = document.getElementById('search-btn');
+
+    function clearHighlights() {
+        document.querySelectorAll('#compact-duty-body td, #expanded-duty-body td').forEach(cell => {
+            cell.classList.remove('s1-highlight-duty-person');
+        });
     }
 
-
-
-    // 搜索功能实现
-    function setupSearchFunctionality() {
-      const searchInput = document.getElementById('name-search');
-      const searchBtn = document.getElementById('search-btn');
-      
-      // 搜索函数
-      function searchByName() {
+    function searchByName() {
         const searchTerm = searchInput.value.trim().toLowerCase();
-        
-        if (!searchTerm) {
-          // 如果搜索框为空，恢复原始显示
-          updateThreeDayDutyDisplay();
-          if (!document.getElementById('compact-duty-view').classList.contains('hidden')) {
-            // 如果当前是紧凑视图，直接返回
-            return;
-          }
-          // 如果当前是展开视图，更新展开视图
-          updateExpandedDutyDisplay();
-          return;
-        }
-        
-        // 根据当前视图模式执行不同的搜索逻辑
-        if (!document.getElementById('compact-duty-view').classList.contains('hidden')) {
-          // 紧凑视图搜索
-          const today = new Date();
-          const yesterday = new Date(today);
-          yesterday.setDate(today.getDate() - 1);
-          const tomorrow = new Date(today);
-          tomorrow.setDate(today.getDate() + 1);
-          
-          const dates = [yesterday, today, tomorrow];
-          const headers = ['yesterday-header', 'today-header', 'tomorrow-header'];
-          const bodies = ['yesterday-duty', 'today-duty', 'tomorrow-duty'];
-          
-          // 为每一天执行搜索
-          dates.forEach((date, dateIndex) => {
-            const dayIndex = getDayOfWeek(date) - 1;
-            
-            if (dayIndex < 0 || dayIndex > 4) {
-              return; // 跳过周末
-            }
-            
-            // 获取当天的所有任务行
-            const rows = document.querySelectorAll('#compact-duty-body tr');
-            
-            // 遍历所有行
-            rows.forEach(row => {
-              const cells = row.querySelectorAll('td');
-              const taskCell = cells[0];
-              const personCell = cells[dateIndex + 1]; // +1 因为第一列是任务名称
-              
-              // 获取当前任务和人员
-              const task = taskCell.textContent;
-              const person = personCell.textContent.toLowerCase();
-              
-              // 检查人员是否匹配搜索词
-              if (person.includes(searchTerm)) {
-                // 匹配，高亮显示
-                row.classList.add('bg-yellow-100');
-                personCell.classList.add('font-bold', 'text-red-600');
-              } else {
-                // 不匹配，隐藏行或恢复默认样式
-                row.classList.remove('bg-yellow-100');
-                personCell.classList.remove('font-bold', 'text-red-600');
-              }
-            });
-          });
-        } else {
-          // 展开视图搜索
-          const rows = document.querySelectorAll('#expanded-duty-body tr');
-          
-          // 遍历所有行
-          rows.forEach(row => {
+        clearHighlights();
+        if (!searchTerm) return;
+
+        const selector = !document.getElementById('compact-duty-view').classList.contains('hidden')
+            ? '#compact-duty-body tr'
+            : '#expanded-duty-body tr';
+
+        document.querySelectorAll(selector).forEach(row => {
             const cells = row.querySelectorAll('td');
-            let found = false;
-            
-            // 从第二列开始检查每个人员单元格
             for (let i = 1; i < cells.length; i++) {
-              const person = cells[i].textContent.toLowerCase();
-              
-              if (person.includes(searchTerm)) {
-                found = true;
-                cells[i].classList.add('font-bold', 'text-red-600', 'bg-yellow-100');
-              } else {
-                cells[i].classList.remove('font-bold', 'text-red-600', 'bg-yellow-100');
-              }
+                const person = cells[i].textContent.toLowerCase();
+                if (person.includes(searchTerm)) {
+                    cells[i].classList.add('s1-highlight-duty-person');
+                }
             }
-            
-            // 根据是否找到匹配项设置行的显示状态
-            if (found) {
-              row.classList.add('bg-yellow-50');
-              row.style.display = '';
-            } else {
-              row.classList.remove('bg-yellow-50');
-              // 可以选择隐藏不匹配的行，但这里我们保留它们
-            }
-          });
-        }
-      }
-      
-      // 绑定搜索按钮点击事件
-      searchBtn.addEventListener('click', searchByName);
-      
-      // 绑定输入框回车事件
-      searchInput.addEventListener('keyup', (event) => {
-        if (event.key === 'Enter') {
-          searchByName();
-        }
-      });
+        });
     }
 
-    // 初始化页面
-    function initPage() {
-      updateCurrentDateDisplay();
-      updateThreeDayDutyDisplay();
-      
-      // 设置搜索功能
-      setupSearchFunctionality();
-      
-      // 绑定展开/收起按钮事件
-      document.getElementById('toggle-duty-view').addEventListener('click', function() {
-        toggleDutyView();
-        // 切换视图后重新应用搜索
-        const searchInput = document.getElementById('name-search');
-        if (searchInput.value.trim()) {
-          // 如果搜索框有内容，触发搜索
-          document.getElementById('search-btn').click();
+    searchBtn.addEventListener('click', searchByName);
+    searchInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') searchByName();
+    });
+    searchInput.addEventListener('input', () => {
+        if (!searchInput.value.trim()) clearHighlights();
+    });
+}
+
+// 点击空白处收起所有展开的任务
+document.addEventListener('click', () => {
+    document.querySelectorAll('.s1-task-full.show').forEach(el => el.classList.remove('show'));
+});
+
+// 打印：临时切到展开视图，打印后恢复
+function setupPrintFunctionality() {
+    const printBtn = document.getElementById('print-btn');
+    const printDateEl = document.getElementById('print-date');
+
+    // 每次点击时刷新打印日期
+    printBtn.addEventListener('click', () => {
+        printDateEl.textContent = new Date().toLocaleDateString('zh-CN', {
+            year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+        });
+
+        const compactView = document.getElementById('compact-duty-view');
+        const expandedView = document.getElementById('expanded-duty-view');
+        const wasCompact = !compactView.classList.contains('hidden');
+
+        if (wasCompact) {
+            compactView.classList.add('hidden');
+            expandedView.classList.remove('hidden');
+            updateExpandedDutyDisplay();
         }
-      });
-      
-      // 绑定周视图切换按钮事件
-      document.getElementById('prev-week').addEventListener('click', () => {
+
+        // 触发打印
+        window.print();
+
+        // 恢复视图
+        const restore = () => {
+            if (wasCompact) {
+                compactView.classList.remove('hidden');
+                expandedView.classList.add('hidden');
+            }
+            window.removeEventListener('afterprint', restore);
+        };
+        window.addEventListener('afterprint', restore);
+
+        // Safari 等不支持 afterprint 的兜底
+        setTimeout(() => {
+            if (wasCompact) {
+                compactView.classList.remove('hidden');
+                expandedView.classList.add('hidden');
+            }
+        }, 1000);
+    });
+}
+
+function initPage() {
+    updateCurrentDateDisplay();
+    updateThreeDayDutyDisplay();
+    setupSearchFunctionality();
+    setupPrintFunctionality();
+
+    document.getElementById('toggle-duty-view').addEventListener('click', function() {
+        toggleDutyView();
+        const searchInput = document.getElementById('name-search');
+        if (searchInput.value.trim()) document.getElementById('search-btn').click();
+    });
+
+    document.getElementById('prev-week').addEventListener('click', () => {
         displayWeekOffset--;
         updateExpandedDutyDisplay();
-        // 切换周视图后重新应用搜索
         const searchInput = document.getElementById('name-search');
-        if (searchInput.value.trim()) {
-          document.getElementById('search-btn').click();
-        }
-      });
-      
-      document.getElementById('current-week').addEventListener('click', () => {
+        if (searchInput.value.trim()) document.getElementById('search-btn').click();
+    });
+    document.getElementById('current-week').addEventListener('click', () => {
         displayWeekOffset = 0;
         updateExpandedDutyDisplay();
-        // 切换周视图后重新应用搜索
         const searchInput = document.getElementById('name-search');
-        if (searchInput.value.trim()) {
-          document.getElementById('search-btn').click();
-        }
-      });
-      
-      document.getElementById('next-week').addEventListener('click', () => {
+        if (searchInput.value.trim()) document.getElementById('search-btn').click();
+    });
+    document.getElementById('next-week').addEventListener('click', () => {
         displayWeekOffset++;
         updateExpandedDutyDisplay();
-        // 切换周视图后重新应用搜索
         const searchInput = document.getElementById('name-search');
-        if (searchInput.value.trim()) {
-          document.getElementById('search-btn').click();
-        }
-      });
-    }
+        if (searchInput.value.trim()) document.getElementById('search-btn').click();
+    });
+}
 
-    // 页面加载完成后初始化
-    document.addEventListener('DOMContentLoaded', initPage);
-  </script>
+document.addEventListener('DOMContentLoaded', initPage);
+</script>
 </body>
 </html>

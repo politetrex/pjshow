@@ -4,174 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>24点机</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../src/css/s1.css">
+
+    <script>
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#93c5fd',
+                        accent: '#1d4ed8',
+                        neutral: '#f1f5f9',
+                        'neutral-dark': '#94a3b8'
+                    },
+                    fontFamily: { sans: ['Arial', 'sans-serif'] },
+                    boxShadow: {
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-        }
-        body {
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(145deg, #f5f7fa 0%, #e9edf2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 2.5rem;
-            box-shadow: 0 25px 40px -12px rgba(0, 20, 30, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.6);
-            padding: 2rem;
-            width: 100%;
-            max-width: 720px;
-            position: relative;
-        }
-        .header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        h1 {
-            font-size: 1.7rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            color: #1e2b36;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin: 0;
-            flex: 1;
-            min-width: 0;
-        }
-        .nickname-wrap {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            flex-shrink: 0;
-        }
-        .nickname-input {
-            width: 6.5rem;
-            padding: 0.4rem 0.7rem;
-            border: 1px solid #d0dee9;
-            border-radius: 0.9rem;
-            font-size: 0.85rem;
-            background: white;
-            outline: none;
-            transition: 0.15s;
-        }
-        .nickname-input:focus {
-            border-color: #1e2b36;
-            box-shadow: 0 0 0 2px rgba(30,43,54,0.12);
-        }
-        .nickname-btn {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-            border-radius: 0.9rem;
-            border: none;
-            background: #1e2b36;
-            color: white;
-            cursor: pointer;
-            font-weight: 500;
-            transition: 0.1s;
-        }
-        .nickname-btn:active {
-            transform: translateY(2px);
-        }
-        .problem-area {
-            background: rgba(30, 43, 54, 0.06);
-            border-radius: 2rem;
-            padding: 1.5rem 1.5rem 1.2rem;
-            margin-bottom: 2rem;
-            box-shadow:
-                inset 0 0 0 1px rgba(255, 255, 255, 0.35),
-                inset 0 2px 8px rgba(0, 0, 0, 0.08),
-                0 14px 28px -14px rgba(0, 0, 0, 0.30);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-        .nav-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.2rem;
-            gap: 0.5rem;
-        }
-        .nav-side {
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .nav-center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex: 1;
-            min-width: 0;
-        }
-        .nav-center .counter {
-            font-size: 0.9rem;
-            color: #3f5768;
-            background: rgba(240, 245, 249, 0.8);
-            padding: 0.35rem 1rem;
-            border-radius: 999px;
-            font-weight: 500;
-            text-align: center;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-        .nav-center .jump-wrap {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-        .nav-center .jump-input {
-            width: 4.5rem;
-            padding: 0.35rem 0.5rem;
-            border: 1px solid #d0dee9;
-            border-radius: 0.75rem;
-            font-size: 0.85rem;
-            text-align: center;
-            background: white;
-            outline: none;
-            transition: 0.15s;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-        }
-        .nav-center .jump-input:focus {
-            border-color: #1e2b36;
-            box-shadow: 0 0 0 2px rgba(30,43,54,0.12);
-        }
-        .nav-center .jump-btn {
-            padding: 0.35rem 0.7rem;
-            font-size: 0.8rem;
-            border-radius: 0.75rem;
-            border: none;
-            background: #1e2b36;
-            color: white;
-            cursor: pointer;
-            font-weight: 500;
-            transition: 0.1s;
-        }
-        .nav-center .jump-btn:active {
-            transform: translateY(2px);
-        }
-        .numbers {
-            display: flex;
-            justify-content: center;
-            gap: 1.25rem;
-            flex-wrap: wrap;
-            margin-bottom: 0.8rem;
-        }
-        .number-tile {
-            background: #ffffff;
-            color: #1e2b36;
+        .s1-number-tile {
+            background: var(--s1-bg-card);
+            color: var(--s1-text);
             font-size: 3rem;
             font-weight: 600;
             width: 5rem;
@@ -181,51 +50,37 @@
             align-items: center;
             justify-content: center;
             border-radius: 1.5rem;
-            border: 2px dotted #a5b8c7;
+            border: 2px dotted var(--s1-border);
             box-shadow: 0 6px 0 rgba(0,0,0,0.08), 0 12px 18px -8px rgba(0,0,0,0.18);
             position: relative;
         }
-        .number-tile .card-label {
+        .s1-number-tile.placeholder {
+            background: var(--s1-neutral);
+            border: 2px dotted var(--s1-border);
+            color: var(--s1-text-dim);
+        }
+        .s1-card-label {
             font-size: 0.55rem;
             letter-spacing: 0.18em;
-            color: #8ba0b0;
+            color: var(--s1-text-dim);
             font-weight: 600;
             margin-top: 0.15rem;
         }
-        .number-tile.placeholder {
-            background: #f4f8fb;
-            border: 2px dotted #c5d4e0;
-            color: #8ba0b0;
-            box-shadow: 0 6px 0 rgba(0,0,0,0.05), 0 12px 18px -8px rgba(0,0,0,0.12);
-        }
-        .author-line {
-            text-align: right;
-            font-size: 0.85rem;
-            color: #5c7383;
-            padding-right: 0.25rem;
-            margin-top: 0.2rem;
-        }
-        .input-section {
-            display: flex;
-            gap: 0.75rem;
-            margin: 1.5rem 0 1rem;
-            flex-wrap: wrap;
-        }
-        .expr-container {
+        .s1-expr-container {
             flex: 1;
             min-width: 200px;
             position: relative;
-            border: 2px solid #d0dee9;
+            border: 2px solid var(--s1-border);
             border-radius: 1.5rem;
-            background: white;
+            background: var(--s1-bg-card);
             transition: 0.15s;
             cursor: text;
         }
-        .expr-container:focus-within {
-            border-color: #1e2b36;
-            box-shadow: 0 0 0 3px rgba(30,43,54,0.15);
+        .s1-expr-container:focus-within {
+            border-color: var(--s1-primary);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
         }
-        .expr-hidden-input {
+        .s1-expr-hidden-input {
             position: absolute;
             inset: 0;
             width: 100%;
@@ -243,7 +98,7 @@
             z-index: 2;
             cursor: text;
         }
-        .expr-render {
+        .s1-expr-render {
             padding: 1rem 1.25rem;
             font-size: 1.1rem;
             font-family: 'SF Mono', 'Fira Code', monospace;
@@ -252,85 +107,26 @@
             word-break: break-all;
             min-height: 3.5rem;
             line-height: 1.5;
-            color: #1e2b36;
+            color: var(--s1-text);
             pointer-events: none;
             position: relative;
             z-index: 1;
         }
-        .expr-render .num-valid {
-            color: #16a34a;
-            font-weight: 600;
-        }
-        .expr-render .num-invalid {
-            color: #dc2626;
-            font-weight: 600;
-        }
-        .fake-caret {
+        .s1-num-valid { color: #16a34a; font-weight: 600; }
+        .s1-num-invalid { color: #dc2626; font-weight: 600; }
+        .s1-fake-caret {
             display: none;
             width: 2px;
             height: 1.2em;
-            background: #1e2b36;
+            background: var(--s1-text);
             vertical-align: text-bottom;
             margin: 0 -1px;
-            animation: blink 1s step-end infinite;
+            animation: s1-blink 1s step-end infinite;
         }
-        .expr-container:focus-within .fake-caret {
-            display: inline-block;
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-        .expr-render .placeholder {
-            color: #9aaebb;
-            font-weight: 400;
-        }
-        .btn {
-            border: none;
-            background: #1e2b36;
-            color: white;
-            font-weight: 500;
-            padding: 0 1.8rem;
-            border-radius: 1.5rem;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.15s;
-            box-shadow: 0 6px 0 #0d161c, 0 8px 16px -6px rgba(0,0,0,0.2);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            height: 3.5rem;
-        }
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #0d161c, 0 8px 16px -6px rgba(0,0,0,0.2);
-        }
-        .btn.secondary {
-            background: #ffffff;
-            color: #1e2b36;
-            box-shadow: 0 6px 0 #b6c7d4, 0 8px 16px -6px rgba(0,0,0,0.1);
-            border: 1px solid #d9e3ec;
-        }
-        .btn.secondary:active {
-            box-shadow: 0 2px 0 #b6c7d4, 0 8px 16px -6px rgba(0,0,0,0.1);
-        }
-        .btn:disabled {
-            opacity: 0.4;
-            transform: translateY(0);
-            box-shadow: 0 6px 0 #0d161c, 0 8px 16px -6px rgba(0,0,0,0.1);
-            pointer-events: none;
-        }
-        .btn.tiny {
-            padding: 0 1rem;
-            height: 2.5rem;
-            font-size: 0.85rem;
-            box-shadow: 0 4px 0 #0d161c, 0 6px 12px -6px rgba(0,0,0,0.2);
-            white-space: nowrap;
-        }
-        .btn.tiny.secondary {
-            box-shadow: 0 4px 0 #b6c7d4, 0 6px 12px -6px rgba(0,0,0,0.1);
-        }
-        .message {
+        .s1-expr-container:focus-within .s1-fake-caret { display: inline-block; }
+        @keyframes s1-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .s1-expr-render .s1-placeholder { color: var(--s1-text-dim); font-weight: 400; }
+        .s1-message {
             padding: 1rem 1.5rem;
             border-radius: 1.5rem;
             background: #e9f2fa;
@@ -342,83 +138,35 @@
             justify-content: center;
             gap: 0.3rem;
             margin: 1rem 0 1.5rem;
-            border-left: 6px solid #1e2b36;
+            border-left: 6px solid var(--s1-primary);
             word-break: break-word;
         }
-        .message .line1 { font-size: 1rem; }
-        .message .line2 { font-size: 0.85rem; opacity: 0.75; }
-        .message.success {
-            background: #dff0e3;
-            border-left-color: #1f7a4b;
-            color: #0f4429;
-        }
-        .message.warning {
-            background: #fef9e0;
-            border-left-color: #b88a00;
-            color: #6b4e00;
-        }
-        .message.error {
-            background: #fce9e9;
-            border-left-color: #bc2c2c;
-            color: #741818;
-        }
-        .footer-note {
-            margin-top: 1.8rem;
-            font-size: 0.75rem;
-            text-align: center;
-            color: #708898;
-            border-top: 1px solid rgba(0,0,0,0.05);
-            padding-top: 1rem;
-        }
-        .history-section {
-            margin-top: 2rem;
-            border-top: 1px solid rgba(0,0,0,0.08);
-            padding-top: 1.2rem;
-        }
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.8rem;
-        }
-        .history-title {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #1e2b36;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .history-list {
-            background: #ffffffb0;
-            border-radius: 1.5rem;
-            padding: 0.5rem 0.2rem;
-            max-height: 220px;
-            overflow-y: auto;
-            box-shadow: inset 0 0 0 1px #ffffff;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .history-item {
+        .s1-message.success { background: #dff0e3; border-left-color: #1f7a4b; color: #0f4429; }
+        .s1-message.warning { background: #fef9e0; border-left-color: #b88a00; color: #6b4e00; }
+        .s1-message.error { background: #fce9e9; border-left-color: #bc2c2c; color: #741818; }
+        .dark .s1-message { background: #1e293b; color: #e2e8f0; }
+        .dark .s1-message.success { background: #14532d; color: #bbf7d0; }
+        .dark .s1-message.warning { background: #713f12; color: #fef08a; }
+        .dark .s1-message.error { background: #7f1d1d; color: #fecaca; }
+        .s1-history-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0.6rem 1rem;
             border-radius: 1rem;
-            background: #f8fbfe;
+            background: var(--s1-bg-card);
             font-size: 0.9rem;
-            color: #1a2e3b;
-            border: 1px solid #e6eef5;
+            color: var(--s1-text);
+            border: 1px solid var(--s1-border);
             margin: 0 0.2rem;
         }
-        .history-item .expr {
+        .s1-history-item .s1-expr {
             font-family: 'SF Mono', 'Fira Code', monospace;
             font-weight: 500;
             letter-spacing: 0.3px;
             word-break: break-all;
         }
-        .history-item .nums {
+        .s1-history-item .s1-nums {
             color: #3f6178;
             font-size: 0.8rem;
             background: #e2ecf5;
@@ -429,18 +177,9 @@
             cursor: pointer;
             transition: 0.1s;
         }
-        .history-item .nums:hover {
-            background: #c5d9ea;
-            color: #1e3d54;
-        }
-        .empty-history {
-            text-align: center;
-            color: #8ba0b0;
-            font-size: 0.85rem;
-            padding: 0.8rem;
-            font-style: italic;
-        }
-        .widgets-corner {
+        .dark .s1-history-item .s1-nums { background: #334155; color: #cbd5e1; }
+        .s1-history-item .s1-nums:hover { background: #c5d9ea; color: #1e3d54; }
+        .s1-widgets-corner {
             position: fixed;
             right: 1.5rem;
             bottom: 1.5rem;
@@ -449,906 +188,585 @@
             z-index: 1000;
             pointer-events: none;
         }
-        .widgets-corner > * {
-            pointer-events: auto;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbdae6;
-            border-radius: 10px;
-        }
+        .s1-widgets-corner > * { pointer-events: auto; }
         @media (max-width: 520px) {
-            .nav-row {
-                flex-wrap: wrap;
-            }
-            .nav-center {
-                order: 3;
-                width: 100%;
-                margin-top: 0.6rem;
-                justify-content: center;
-            }
-            .header-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+            .s1-number-tile { width: 4rem; height: 4.5rem; font-size: 2.2rem; }
         }
     </style>
 </head>
-<body>
-<div class="card" id="app">
-    <div class="header-row">
-        <h1 id="titleDisplay">🧮 24点机</h1>
-        <div class="nickname-wrap">
-            <input type="text" class="nickname-input" id="nicknameInput" placeholder="昵称" maxlength="12">
-            <button class="nickname-btn" id="nicknameBtn">设置</button>
+<body class="min-h-screen flex items-center justify-center p-6">
+<div class="s1-card w-full max-w-3xl" id="app">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h1 id="titleDisplay" class="text-2xl font-bold text-accent dark:text-blue-300 flex items-center gap-2">🧮 24点机</h1>
+        <div class="flex items-center gap-2">
+            <input type="text" id="nicknameInput" placeholder="昵称" maxlength="12"
+                   class="px-3 py-1.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm w-28 dark:bg-slate-700 dark:text-slate-100">
+            <button id="nicknameBtn" class="s1-btn s1-btn-primary text-sm px-4 py-1.5">设置</button>
+            <button id="themeToggle" class="s1-btn s1-btn-secondary text-sm px-3 py-1.5" title="切换明暗模式">
+                <i id="themeIcon" class="fa fa-moon-o"></i>
+            </button>
         </div>
     </div>
 
-    <div class="problem-area" id="problemArea">
-        <div class="nav-row">
-            <div class="nav-side">
-                <button class="btn secondary tiny" id="prevBtn" disabled>← 上一题</button>
-            </div>
-            <div class="nav-center">
-                <span class="counter" id="counterDisplay">0 / 0</span>
-                <div class="jump-wrap">
-                    <input type="number" class="jump-input" id="jumpInput" placeholder="题号" min="1" inputmode="numeric">
-                    <button class="jump-btn" id="jumpBtn">跳转</button>
+    <div class="bg-slate-100 dark:bg-slate-700 rounded-2xl p-6 mb-6 shadow-inner">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <button id="prevBtn" class="s1-btn s1-btn-secondary text-sm px-4 py-1.5" disabled>← 上一题</button>
+            <div class="flex items-center gap-3 flex-wrap justify-center">
+                <span id="counterDisplay" class="text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 px-4 py-1 rounded-full shadow-sm">0 / 0</span>
+                <div class="flex items-center gap-1">
+                    <input type="number" id="jumpInput" placeholder="题号" min="1"
+                           class="w-20 px-2 py-1.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-center dark:bg-slate-700 dark:text-slate-100">
+                    <button id="jumpBtn" class="s1-btn s1-btn-primary text-xs px-3 py-1.5">跳转</button>
                 </div>
             </div>
-            <div class="nav-side">
-                <button class="btn secondary tiny" id="nextBtn" disabled>下一题 →</button>
-            </div>
+            <button id="nextBtn" class="s1-btn s1-btn-secondary text-sm px-4 py-1.5" disabled>下一题 →</button>
         </div>
-        <div class="numbers" id="numbersContainer">
-            <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-            <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-            <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-            <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
+        <div class="flex justify-center gap-4 flex-wrap mb-3" id="numbersContainer">
+            <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+            <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+            <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+            <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
         </div>
-        <div class="author-line" id="authorDisplay">—</div>
+        <div class="text-right text-sm text-slate-500 dark:text-slate-400" id="authorDisplay">—</div>
     </div>
 
-    <div class="input-section">
-        <div class="expr-container" id="exprContainer">
-            <input type="text" class="expr-hidden-input" id="exprInput" 
+    <div class="flex flex-wrap gap-3 mb-4">
+        <div class="flex-1 min-w-[200px] relative s1-expr-container" id="exprContainer">
+            <input type="text" class="s1-expr-hidden-input" id="exprInput"
                    autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
-            <div class="expr-render" id="exprRender"></div>
+            <div class="s1-expr-render" id="exprRender"></div>
         </div>
-        <button class="btn" id="submitBtn">计算</button>
+        <button id="submitBtn" class="s1-btn s1-btn-primary flex items-center gap-2 px-6 h-[3.5rem]">
+            <i class="fa fa-calculator"></i> 计算
+        </button>
     </div>
 
-    <div class="message" id="messageBox">
+    <div class="s1-message" id="messageBox">
         <div class="line1">正在加载题库…</div>
-        <div class="line2"></div>
+        <div class="line2 text-sm opacity-75"></div>
     </div>
 
-    <div class="history-section" id="historySection">
-        <div class="history-header">
-            <span class="history-title">📋 已解出的答案</span>
-            <button class="btn tiny secondary" id="clearHistoryBtn">清空记录</button>
+    <div class="mt-8 border-t border-gray-200 dark:border-slate-700 pt-6">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <i class="fa fa-history text-primary"></i> 已解出的答案
+            </h3>
+            <button id="clearHistoryBtn" class="s1-btn s1-btn-secondary text-xs px-3 py-1.5">清空记录</button>
         </div>
-        <div class="history-list" id="historyList">
-            <div class="empty-history">暂无解答记录</div>
+        <div class="space-y-2 max-h-52 overflow-y-auto pr-1" id="historyList">
+            <div class="text-center text-slate-400 dark:text-slate-500 text-sm py-4">暂无解答记录</div>
         </div>
     </div>
 
-    <div class="footer-note">
+    <div class="mt-6 text-center text-xs text-slate-400 dark:text-slate-500 border-t border-gray-200 dark:border-slate-700 pt-4">
         © 2026 24点机 · Made with ❤️
     </div>
 </div>
-
-<div class="widgets-corner" id="widgetsCorner"></div>
+<div class="s1-widgets-corner" id="widgetsCorner"></div>
 
 <script>
-    (function() {
-        const API_URL = 'https://note.qninq.cn/api/tiku_24dot?raw=1';
-        const STORAGE_KEY = '24dot_solved_history';
-        const NICKNAME_KEY = '24dot_nickname';
-        const RENDER_DELAY = 300;
+(function() {
+    const API_URL = 'https://note.qninq.cn/api/tiku_24dot?raw=1';
+    const STORAGE_KEY = '24dot_solved_history';
+    const NICKNAME_KEY = '24dot_nickname';
+    const RENDER_DELAY = 300;
+    const ALLOWED_CHARS = /[0-9+\-*/() ]/;
+    const RULE_TEXT = '只允许 0-9 + - * / 空格 ( )';
+    const FALLBACK_PROBLEMS = [
+        { "problem": [2, 3, 4, 6], "author": "default user" },
+        { "problem": [3, 3, 8, 8], "author": "user one" },
+        { "problem": [1, 2, 3, 4], "author": "fallback" }
+    ];
 
-        const ALLOWED_CHARS = /[0-9+\-*/() ]/;
-        const RULE_TEXT = '只允许 0-9 + - * / 空格 ( )';
+    let problems = [];
+    let currentIndex = 0;
+    let isLoading = false;
+    let currentProblem = null;
+    let highlightTimer = null;
+    let lastInputLength = 0;
 
-        const FALLBACK_PROBLEMS = [
-            { "problem": [2, 3, 4, 6], "author": "default user" },
-            { "problem": [3, 3, 8, 8], "author": "user one" },
-            { "problem": [1, 2, 3, 4], "author": "fallback" }
-        ];
+    const numbersContainer = document.getElementById('numbersContainer');
+    const authorDisplay = document.getElementById('authorDisplay');
+    const counterDisplay = document.getElementById('counterDisplay');
+    const exprInput = document.getElementById('exprInput');
+    const exprRender = document.getElementById('exprRender');
+    const exprContainer = document.getElementById('exprContainer');
+    const submitBtn = document.getElementById('submitBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const jumpInput = document.getElementById('jumpInput');
+    const jumpBtn = document.getElementById('jumpBtn');
+    const messageBox = document.getElementById('messageBox');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+    const titleDisplay = document.getElementById('titleDisplay');
+    const nicknameInput = document.getElementById('nicknameInput');
+    const nicknameBtn = document.getElementById('nicknameBtn');
+    const widgetsCorner = document.getElementById('widgetsCorner');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
 
-        let problems = [];
-        let currentIndex = 0;
-        let isLoading = false;
-        let currentProblem = null;
-        let highlightTimer = null;
-        let lastInputLength = 0;
+    // ---------- 主题 ----------
+    function initThemeIcon() {
+        const isDark = document.documentElement.classList.contains('dark');
+        themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
+    }
+    themeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        initThemeIcon();
+    });
+    initThemeIcon();
 
-        const numbersContainer = document.getElementById('numbersContainer');
-        const authorDisplay = document.getElementById('authorDisplay');
-        const counterDisplay = document.getElementById('counterDisplay');
-        const exprInput = document.getElementById('exprInput');
-        const exprRender = document.getElementById('exprRender');
-        const exprContainer = document.getElementById('exprContainer');
-        const submitBtn = document.getElementById('submitBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const jumpInput = document.getElementById('jumpInput');
-        const jumpBtn = document.getElementById('jumpBtn');
-        const messageBox = document.getElementById('messageBox');
-        const historyList = document.getElementById('historyList');
-        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-        const titleDisplay = document.getElementById('titleDisplay');
-        const nicknameInput = document.getElementById('nicknameInput');
-        const nicknameBtn = document.getElementById('nicknameBtn');
-        const widgetsCorner = document.getElementById('widgetsCorner');
-
-        // ---------- 昵称 ----------
-        function loadNickname() {
-            try { return localStorage.getItem(NICKNAME_KEY) || ''; } catch (e) { return ''; }
-        }
-        function saveNickname(name) {
-            try { localStorage.setItem(NICKNAME_KEY, name); } catch (e) {}
-        }
-        function updateTitle() {
-            const name = loadNickname();
-            if (name && name.trim() !== '') {
-                titleDisplay.textContent = '欢迎使用24点机，' + name.trim();
-            } else {
-                titleDisplay.textContent = '🧮 24点机';
-            }
-        }
-        function handleSetNickname() {
-            const val = nicknameInput.value.trim();
-            saveNickname(val);
-            updateTitle();
-            nicknameInput.value = '';
-        }
-
-        // 从 URL 参数 ?nicheng=xxx 读取昵称并保存
-        function applyNicknameFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const name = params.get('nicheng');
-            if (name !== null && name.trim() !== '') {
-                saveNickname(name.trim());
-                const url = new URL(window.location);
-                url.searchParams.delete('nicheng');
-                window.history.replaceState({}, '', url);
-            }
-        }
-
-        // ---------- URL 参数 ----------
-        function getProblemIdFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('problemId');
-            if (id === null) return null;
-            const num = parseInt(id, 10);
-            return isNaN(num) ? null : num;
-        }
-        function updateUrlProblemId(index) {
-            const id = index + 1;
+    // ---------- 昵称 ----------
+    function loadNickname() { try { return localStorage.getItem(NICKNAME_KEY) || ''; } catch (e) { return ''; } }
+    function saveNickname(name) { try { localStorage.setItem(NICKNAME_KEY, name); } catch (e) {} }
+    function updateTitle() {
+        const name = loadNickname();
+        titleDisplay.textContent = (name && name.trim() !== '') ? '欢迎使用24点机，' + name.trim() : '🧮 24点机';
+    }
+    function handleSetNickname() {
+        saveNickname(nicknameInput.value.trim());
+        updateTitle();
+        nicknameInput.value = '';
+    }
+    function applyNicknameFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('nicheng');
+        if (name !== null && name.trim() !== '') {
+            saveNickname(name.trim());
             const url = new URL(window.location);
-            url.searchParams.set('problemId', id);
+            url.searchParams.delete('nicheng');
             window.history.replaceState({}, '', url);
         }
+    }
 
-        // ---------- 消息框 ----------
-        function setMessage(line1, line2 = '', type = 'info') {
-            messageBox.className = 'message';
-            if (type === 'success') messageBox.classList.add('success');
-            else if (type === 'warning') messageBox.classList.add('warning');
-            else if (type === 'error') messageBox.classList.add('error');
+    // ---------- URL ----------
+    function getProblemIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('problemId');
+        if (id === null) return null;
+        const num = parseInt(id, 10);
+        return isNaN(num) ? null : num;
+    }
+    function updateUrlProblemId(index) {
+        const url = new URL(window.location);
+        url.searchParams.set('problemId', index + 1);
+        window.history.replaceState({}, '', url);
+    }
 
-            messageBox.innerHTML = `
-                <div class="line1">${escapeHtml(line1)}</div>
-                ${line2 ? `<div class="line2">${escapeHtml(line2)}</div>` : ''}
-            `;
-        }
-
-        function makePrompt(nums) {
-            const numsStr = nums && nums.length ? nums.join(', ') : '题目数字';
-            return {
-                line1: `请使用 ${numsStr} 算出 24`,
-                line2: RULE_TEXT
-            };
-        }
-
-        function resetToDefaultIfNotDefault() {
-            if (messageBox.classList.contains('success') ||
-                messageBox.classList.contains('warning') ||
-                messageBox.classList.contains('error')) {
-                const nums = currentProblem ? currentProblem.problem : [];
-                const p = makePrompt(nums);
-                setMessage(p.line1, p.line2, 'info');
-            }
-        }
-
-        function setLoading(loading) {
-            isLoading = loading;
-            if (loading) {
-                submitBtn.disabled = true;
-                prevBtn.disabled = true;
-                nextBtn.disabled = true;
-                exprInput.disabled = true;
-                numbersContainer.innerHTML = `
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                `;
-                authorDisplay.textContent = '—';
-                counterDisplay.textContent = '0 / 0';
-                exprRender.innerHTML = '';
-            } else {
-                submitBtn.disabled = false;
-                exprInput.disabled = false;
-                updateNavButtons();
-            }
-        }
-
-        function updateNavButtons() {
-            if (problems.length === 0 || isLoading) {
-                prevBtn.disabled = true;
-                nextBtn.disabled = true;
-                return;
-            }
-            prevBtn.disabled = currentIndex <= 0;
-            nextBtn.disabled = currentIndex >= problems.length - 1;
-        }
-
-        // ---------- 历史记录 ----------
-        function loadHistory() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (!raw) return [];
-                return JSON.parse(raw);
-            } catch (e) {
-                return [];
-            }
-        }
-        function saveHistory(history) {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch (e) {}
-        }
-        function historyContains(expr, nums) {
-            const history = loadHistory();
-            const numsStr = [...nums].sort((a,b) => a-b).join(',');
-            return history.some(item => item.expr === expr && item.numsStr === numsStr);
-        }
-        function addHistoryItem(expr, nums) {
-            const history = loadHistory();
-            const numsStr = [...nums].sort((a,b) => a-b).join(',');
-            const exists = history.some(item => item.expr === expr && item.numsStr === numsStr);
-            if (exists) return false;
-            history.push({ expr, nums: [...nums], numsStr });
-            saveHistory(history);
-            renderHistory();
-            return true;
-        }
-        function clearHistory() {
-            if (confirm('确定要清空所有解答记录吗？')) {
-                localStorage.removeItem(STORAGE_KEY);
-                renderHistory();
-            }
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str).replace(/[&<>"]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                if (m === '"') return '&quot;';
-                return m;
-            });
-        }
-
-        function renderHistory() {
-            const history = loadHistory();
-            if (history.length === 0) {
-                historyList.innerHTML = '<div class="empty-history">暂无解答记录</div>';
-                return;
-            }
-            const reversed = [...history].reverse();
-            historyList.innerHTML = reversed.map(item => {
-                const numsDisplay = item.nums ? item.nums.join(', ') : '';
-                return `<div class="history-item">
-                    <span class="expr">${escapeHtml(item.expr)}</span>
-                    <span class="nums" data-nums="${escapeHtml(item.numsStr)}">${escapeHtml(numsDisplay)}</span>
-                </div>`;
-            }).join('');
-
-            historyList.querySelectorAll('.nums').forEach(el => {
-                el.addEventListener('click', () => {
-                    const numsStr = el.getAttribute('data-nums');
-                    if (!numsStr) return;
-                    const target = numsStr.split(',').map(Number).sort((a,b) => a-b).join(',');
-                    const idx = problems.findIndex(p => {
-                        const pNums = [...(p.problem || [])].sort((a,b) => a-b).join(',');
-                        return pNums === target;
-                    });
-                    if (idx !== -1) {
-                        currentIndex = idx;
-                        renderProblem();
-                    } else {
-                        setMessage('⚠️ 该题目不在当前题库中', '', 'warning');
-                    }
-                });
-            });
-        }
-
-        // ---------- 有理数（分数）运算 ----------
-        function gcd(a, b) {
-            a = Math.abs(a); b = Math.abs(b);
-            while (b) { const t = b; b = a % b; a = t; }
-            return a || 1;
-        }
-        function makeFrac(n, d) {
-            if (d === 0) return null;
-            if (d < 0) { n = -n; d = -d; }
-            const g = gcd(n, d);
-            return { n: n / g, d: d / g };
-        }
-        function fracAdd(a, b) { return makeFrac(a.n * b.d + b.n * a.d, a.d * b.d); }
-        function fracSub(a, b) { return makeFrac(a.n * b.d - b.n * a.d, a.d * b.d); }
-        function fracMul(a, b) { return makeFrac(a.n * b.n, a.d * b.d); }
-        function fracDiv(a, b) {
-            if (b.n === 0) return null;
-            return makeFrac(a.n * b.d, a.d * b.n);
-        }
-        function fracEquals24(f) {
-            return f && f.d !== 0 && f.n === 24 * f.d;
-        }
-
-        function evalFraction(expr) {
-            let pos = 0;
-            const len = expr.length;
-
-            function peek() { return pos < len ? expr[pos] : null; }
-            function next() { return pos < len ? expr[pos++] : null; }
-
-            function parseExpr() {
-                let left = parseTerm();
-                if (left === null) return null;
-                while (peek() === '+' || peek() === '-') {
-                    const op = next();
-                    const right = parseTerm();
-                    if (right === null) return null;
-                    left = op === '+' ? fracAdd(left, right) : fracSub(left, right);
-                    if (left === null) return null;
-                }
-                return left;
-            }
-
-            function parseTerm() {
-                let left = parseFactor();
-                if (left === null) return null;
-                while (peek() === '*' || peek() === '/') {
-                    const op = next();
-                    const right = parseFactor();
-                    if (right === null) return null;
-                    left = op === '*' ? fracMul(left, right) : fracDiv(left, right);
-                    if (left === null) return null;
-                }
-                return left;
-            }
-
-            function parseFactor() {
-                const ch = peek();
-                if (ch === null) return null;
-                if (ch === '(') {
-                    next();
-                    const val = parseExpr();
-                    if (val === null) return null;
-                    if (peek() !== ')') return null;
-                    next();
-                    return val;
-                }
-                if (ch === '-') {
-                    next();
-                    const val = parseFactor();
-                    if (val === null) return null;
-                    return makeFrac(-val.n, val.d);
-                }
-                if (ch === '+') {
-                    next();
-                    return parseFactor();
-                }
-                if (/\d/.test(ch)) {
-                    let numStr = '';
-                    while (pos < len && /\d/.test(expr[pos])) {
-                        numStr += expr[pos++];
-                    }
-                    return makeFrac(parseInt(numStr, 10), 1);
-                }
-                return null;
-            }
-
-            const result = parseExpr();
-            if (result === null) return { ok: false, error: '表达式不合法' };
-            if (pos !== len) return { ok: false, error: '表达式含有多余字符' };
-            return { ok: true, value: result };
-        }
-
-        // ---------- 高亮渲染 ----------
-        function tokenize(expr) {
-            const tokens = [];
-            let i = 0;
-            while (i < expr.length) {
-                const ch = expr[i];
-                if (/\d/.test(ch)) {
-                    let numStr = '';
-                    while (i < expr.length && /\d/.test(expr[i])) {
-                        numStr += expr[i];
-                        i++;
-                    }
-                    tokens.push({ type: 'num', value: numStr });
-                } else {
-                    tokens.push({ type: 'char', value: ch });
-                    i++;
-                }
-            }
-            return tokens;
-        }
-
-        function buildRenderHtml(expr, allowedNumbers, caretPos) {
-            if (expr === '') {
-                const placeholder = '例如: 8/(3-8/3)';
-                return `<span class="fake-caret"></span><span class="placeholder">${escapeHtml(placeholder)}</span>`;
-            }
-
-            const tokens = tokenize(expr);
-            const allowedSet = new Set(allowedNumbers.map(n => String(n)));
-            let charIndex = 0;
-            let caretInserted = false;
-
-            const parts = [];
-            for (const token of tokens) {
-                const start = charIndex;
-                const end = charIndex + token.value.length;
-                let tokenHtml;
-                if (token.type === 'num') {
-                    const isAllowed = allowedSet.has(token.value);
-                    const cls = isAllowed ? 'num-valid' : 'num-invalid';
-                    tokenHtml = `<span class="${cls}">${escapeHtml(token.value)}</span>`;
-                } else {
-                    tokenHtml = escapeHtml(token.value);
-                }
-                parts.push({ start, end, html: tokenHtml });
-                charIndex = end;
-            }
-
-            const caretHtml = '<span class="fake-caret"></span>';
-            let result = '';
-            let lastEnd = 0;
-            for (const part of parts) {
-                if (!caretInserted && caretPos <= part.start) {
-                    result += caretHtml;
-                    caretInserted = true;
-                }
-                result += part.html;
-                lastEnd = part.end;
-            }
-            if (!caretInserted && caretPos >= lastEnd) {
-                result += caretHtml;
-            }
-            if (!caretInserted) {
-                result += caretHtml;
-            }
-            return result;
-        }
-
-        function updateRender() {
-            const expr = exprInput.value;
+    // ---------- 消息 ----------
+    function setMessage(line1, line2 = '', type = 'info') {
+        messageBox.className = 's1-message';
+        if (type === 'success') messageBox.classList.add('success');
+        else if (type === 'warning') messageBox.classList.add('warning');
+        else if (type === 'error') messageBox.classList.add('error');
+        messageBox.innerHTML = `
+            <div class="line1">${escapeHtml(line1)}</div>
+            ${line2 ? `<div class="line2 text-sm opacity-75">${escapeHtml(line2)}</div>` : ''}
+        `;
+    }
+    function makePrompt(nums) {
+        const numsStr = nums && nums.length ? nums.join(', ') : '题目数字';
+        return { line1: `请使用 ${numsStr} 算出 24`, line2: RULE_TEXT };
+    }
+    function resetToDefaultIfNotDefault() {
+        if (messageBox.classList.contains('success') || messageBox.classList.contains('warning') || messageBox.classList.contains('error')) {
             const nums = currentProblem ? currentProblem.problem : [];
-            const caretPos = exprInput.selectionStart ?? expr.length;
-            const html = buildRenderHtml(expr, nums, caretPos);
-            exprRender.innerHTML = html;
-        }
-
-        function clearHighlightTimer() {
-            if (highlightTimer) {
-                clearTimeout(highlightTimer);
-                highlightTimer = null;
-            }
-        }
-        function scheduleRender() {
-            clearHighlightTimer();
-            highlightTimer = setTimeout(() => {
-                updateRender();
-                highlightTimer = null;
-            }, RENDER_DELAY);
-        }
-        function forceRender() {
-            clearHighlightTimer();
-            updateRender();
-        }
-
-        // ---------- 输入过滤 ----------
-        function filterInput(value) {
-            let result = '';
-            for (let i = 0; i < value.length; i++) {
-                const ch = value[i];
-                if (ALLOWED_CHARS.test(ch)) {
-                    result += ch;
-                }
-            }
-            return result;
-        }
-
-        function handleInputFilter(e) {
-            const raw = exprInput.value;
-            const filtered = filterInput(raw);
-
-            if (raw !== filtered) {
-                const caretPos = exprInput.selectionStart;
-                let newCaret = 0;
-                for (let i = 0; i < caretPos && i < raw.length; i++) {
-                    if (ALLOWED_CHARS.test(raw[i])) newCaret++;
-                }
-                exprInput.value = filtered;
-                exprInput.setSelectionRange(newCaret, newCaret);
-            }
-
-            const inputType = e.inputType || '';
-            const isDelete = inputType === 'deleteContentBackward' || inputType === 'deleteContentForward';
-
-            const currentLength = exprInput.value.length;
-            if (currentLength !== lastInputLength) {
-                resetToDefaultIfNotDefault();
-            }
-            lastInputLength = currentLength;
-
-            if (isDelete) {
-                forceRender();
-            } else {
-                scheduleRender();
-            }
-        }
-
-        // ---------- 验证 ----------
-        function extractNumbers(expr) {
-            const cleaned = expr.replace(/\s+/g, '');
-            const tokens = cleaned.match(/\d+/g) || [];
-            return tokens.map(Number);
-        }
-
-        function validateNumbersUsed(expr, allowedNumbers) {
-            const usedNumbers = extractNumbers(expr);
-            const allowed = [...allowedNumbers].sort((a, b) => a - b);
-            const used = [...usedNumbers].sort((a, b) => a - b);
-
-            if (allowed.length !== used.length) return false;
-            for (let i = 0; i < allowed.length; i++) {
-                if (allowed[i] !== used[i]) return false;
-            }
-            return true;
-        }
-
-        function safeEval(expr) {
-            const cleaned = expr.replace(/\s+/g, '');
-            if (cleaned === '') return { success: false, error: '表达式为空' };
-
-            if (!/^[0-9+\-*/()]+$/.test(cleaned)) {
-                return { success: false, error: '表达式只能包含数字和 + - * / ( )' };
-            }
-
-            const parsed = evalFraction(cleaned);
-            if (!parsed.ok) {
-                return { success: false, error: parsed.error || '表达式不合法或计算错误' };
-            }
-
-            const frac = parsed.value;
-            if (fracEquals24(frac)) {
-                return { success: true, value: frac };
-            } else {
-                let display = frac.d === 1 ? String(frac.n) : frac.n + '/' + frac.d;
-                if (frac.d !== 1) {
-                    const approx = frac.n / frac.d;
-                    if (Number.isFinite(approx)) {
-                        display += ' (≈' + approx.toFixed(4) + ')';
-                    }
-                }
-                return { success: false, error: '结果是 ' + display + '，不是 24', value: frac };
-            }
-        }
-
-        function renderProblem() {
-            if (!problems.length || currentIndex < 0 || currentIndex >= problems.length) {
-                numbersContainer.innerHTML = `
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                    <div class="number-tile placeholder">?<span class="card-label">CARD</span></div>
-                `;
-                authorDisplay.textContent = '—';
-                counterDisplay.textContent = '0 / 0';
-                exprInput.value = '';
-                exprRender.innerHTML = '';
-                lastInputLength = 0;
-                setMessage('题库中没有题目', '', 'error');
-                return;
-            }
-
-            const item = problems[currentIndex];
-            currentProblem = item;
-            const nums = item.problem || [];
-
-            const displayNums = [...nums];
-            while (displayNums.length < 4) displayNums.push('?');
-            if (displayNums.length > 4) displayNums.length = 4;
-
-            numbersContainer.innerHTML = displayNums.map(n =>
-                `<div class="number-tile">${n}<span class="card-label">CARD</span></div>`
-            ).join('');
-
-            authorDisplay.textContent = '作者：' + (item.author || 'unknown');
-            counterDisplay.textContent = (currentIndex + 1) + ' / ' + problems.length;
-            exprInput.value = '';
-            lastInputLength = 0;
-            exprInput.focus();
-            forceRender();
             const p = makePrompt(nums);
             setMessage(p.line1, p.line2, 'info');
+        }
+    }
+    function setLoading(loading) {
+        isLoading = loading;
+        if (loading) {
+            submitBtn.disabled = true;
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            exprInput.disabled = true;
+            numbersContainer.innerHTML = `
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+            `;
+            authorDisplay.textContent = '—';
+            counterDisplay.textContent = '0 / 0';
+            exprRender.innerHTML = '';
+        } else {
+            submitBtn.disabled = false;
+            exprInput.disabled = false;
             updateNavButtons();
-            updateUrlProblemId(currentIndex);
-
-            jumpInput.placeholder = '1-' + problems.length;
-            jumpInput.max = problems.length;
         }
+    }
+    function updateNavButtons() {
+        if (problems.length === 0 || isLoading) { prevBtn.disabled = true; nextBtn.disabled = true; return; }
+        prevBtn.disabled = currentIndex <= 0;
+        nextBtn.disabled = currentIndex >= problems.length - 1;
+    }
 
-        // ---------- 解析 JSON ----------
-        function stripComments(line) {
-            const idx = line.indexOf('//');
-            if (idx !== -1) return line.substring(0, idx);
-            return line;
-        }
-
-        function parseProblems(text) {
-            const result = [];
-            const lines = text.split(/\r?\n/);
-            const cleanedLines = lines.map(stripComments).filter(line => line.trim() !== '');
-            const cleanedText = cleanedLines.join(' ');
-
-            const regex = /\{[^{}]*\}/g;
-            let match;
-            while ((match = regex.exec(cleanedText)) !== null) {
-                try {
-                    const obj = JSON.parse(match[0]);
-                    if (obj && Array.isArray(obj.problem)) {
-                        const nums = obj.problem.map(Number).filter(n => !isNaN(n));
-                        if (nums.length > 0) {
-                            result.push({
-                                problem: nums,
-                                author: obj.author || 'anonymous'
-                            });
-                        }
-                    }
-                } catch (e) {
-                    console.warn('跳过无法解析的对象:', match[0]);
-                }
-            }
-            return result;
-        }
-
-        async function fetchProblems() {
-            setLoading(true);
-            setMessage('正在加载题库…', '', 'info');
-            console.log('从 note.qninq.cn/tiku_24dot 加载题库');
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'GET',
-                    headers: { 'Accept': 'text/plain, application/json' }
-                });
-                if (!response.ok) throw new Error('HTTP ' + response.status + ' ' + response.statusText);
-                const text = await response.text();
-                if (!text || text.trim() === '') throw new Error('笔记内容为空');
-                const parsed = parseProblems(text);
-                if (parsed.length === 0) throw new Error('未解析到有效题目');
-                problems = parsed;
-
-                const urlId = getProblemIdFromUrl();
-                if (urlId !== null && urlId >= 1 && urlId <= problems.length) {
-                    currentIndex = urlId - 1;
-                } else {
-                    currentIndex = 0;
-                }
-
-                setLoading(false);
-                renderProblem();
-                console.log('✅ 成功加载 ' + problems.length + ' 道题目');
-            } catch (err) {
-                console.warn('加载笔记失败，使用内置题库:', err.message);
-                problems = FALLBACK_PROBLEMS;
-                currentIndex = 0;
-                setLoading(false);
-                renderProblem();
-                console.log('⚠️ 使用内置题库 (' + problems.length + ' 题)');
-            } finally {
-                if (problems.length > 0) {
-                    setLoading(false);
-                    updateNavButtons();
-                }
-            }
-        }
-
-        function handleSubmit() {
-            if (!currentProblem || problems.length === 0) {
-                setMessage('没有题目可作答', '', 'error');
-                return;
-            }
-
-            const rawExpr = exprInput.value.trim();
-            if (rawExpr === '') {
-                setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error');
-                return;
-            }
-
-            const expr = rawExpr.replace(/\s+/g, '');
-            if (!/^[0-9+\-*/()]+$/.test(expr)) {
-                setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error');
-                return;
-            }
-
-            const nums = currentProblem.problem || [];
-            if (!validateNumbersUsed(expr, nums)) {
-                setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error');
-                return;
-            }
-
-            const evalResult = safeEval(expr);
-            if (evalResult.success) {
-                if (historyContains(expr, nums)) {
-                    setMessage('😅 虽然对了，但好像写过了……', '', 'warning');
-                } else {
-                    setMessage('🎊 你答对了！', '', 'success');
-                    addHistoryItem(expr, nums);
-                }
-            } else {
-                setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error');
-            }
-        }
-
-        function handleJump() {
-            if (!problems.length || isLoading) return;
-            const val = parseInt(jumpInput.value, 10);
-            if (isNaN(val) || val < 1 || val > problems.length) {
-                setMessage('⚠️ 题号需在 1 到 ' + problems.length + ' 之间', '', 'warning');
-                return;
-            }
-            currentIndex = val - 1;
-            renderProblem();
-            jumpInput.value = '';
-        }
-
-        function bindEvents() {
-            submitBtn.addEventListener('click', handleSubmit);
-
-            exprInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === '=') {
-                    e.preventDefault();
-                    handleSubmit();
-                }
-                if (e.key === 'Backspace' || e.key === 'Delete') {
-                    setTimeout(() => {
-                        resetToDefaultIfNotDefault();
-                        forceRender();
-                    }, 0);
-                }
-            });
-
-            exprInput.addEventListener('input', handleInputFilter);
-
-            exprInput.addEventListener('keyup', (e) => {
-                if (e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Enter' && e.key !== '=') {
-                    forceRender();
-                }
-            });
-            exprInput.addEventListener('click', () => forceRender());
-            exprInput.addEventListener('select', () => forceRender());
-
-            exprInput.addEventListener('blur', () => {
-                clearHighlightTimer();
-                updateRender();
-            });
-
-            exprContainer.addEventListener('click', (e) => {
-                if (e.target !== exprInput) {
-                    exprInput.focus();
-                }
-            });
-
-            prevBtn.addEventListener('click', () => {
-                if (problems.length === 0 || isLoading) return;
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    renderProblem();
-                }
-            });
-
-            nextBtn.addEventListener('click', () => {
-                if (problems.length === 0 || isLoading) return;
-                if (currentIndex < problems.length - 1) {
-                    currentIndex++;
-                    renderProblem();
-                }
-            });
-
-            jumpBtn.addEventListener('click', handleJump);
-            jumpInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleJump();
-                }
-            });
-
-            clearHistoryBtn.addEventListener('click', clearHistory);
-
-            nicknameBtn.addEventListener('click', handleSetNickname);
-            nicknameInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSetNickname();
-                }
-            });
-        }
-
-        // ---------- 解法导出（纯文本） ----------
-        // 触发：?submissions=text
-        // 用 JS 拼接字符串，避免被正则/HTML 解析器误判
-        function maybeExportSubmissions() {
-            const params = new URLSearchParams(window.location.search);
-            const val = (params.get('submissions') || '').toLowerCase();
-            if (val !== 'text') return false;
-
-            const history = loadHistory();
-            const lines = history.map(item => JSON.stringify({
-                problem: item.nums,
-                solution: item.expr
-            }));
-            const text = lines.join('\n');
-
-            // 1) 清空 body，去掉卡片
-            document.body.innerHTML = '';
-            document.body.style.cssText = 'margin:0;padding:1.5rem;background:#f5f7fa;' +
-                'font-family:system-ui,sans-serif;';
-
-            // 2) 左右标记（JS 拼接，避免误判）
-            const openTag = '<' + 'pre' + '>';
-            const closeTag = '<' + '/' + 'pre' + '>';
-            const before = '---'+' BEGIN SUBMISSIONS'+' ---\n';
-            const after = '\n--- END SUBMISSIONS ---';
-
-            // 3) 用 textContent 写入，保证 < > 不被解析
-            const pre = document.createElement('pre');
-            pre.textContent = before + (text || '（暂无记录）') + after;
-            pre.style.cssText = 'margin:0;padding:1.5rem;background:#fff;border-radius:1rem;' +
-                'box-shadow:0 10px 30px -10px rgba(0,0,0,0.2);white-space:pre-wrap;' +
-                'word-break:break-all;font-family:"SF Mono","Fira Code",monospace;' +
-                'font-size:0.95rem;color:#1e2b36;line-height:1.6;';
-            document.body.appendChild(pre);
-            return true;
-        }
-
-        async function init() {
-            // 如果请求导出，优先处理
-            if (maybeExportSubmissions()) return;
-
-            // 应用 URL 中的昵称
-            applyNicknameFromUrl();
-
-            bindEvents();
+    // ---------- 历史 ----------
+    function loadHistory() { try { const raw = localStorage.getItem(STORAGE_KEY); if (!raw) return []; return JSON.parse(raw); } catch (e) { return []; } }
+    function saveHistory(history) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(history)); } catch (e) {} }
+    function historyContains(expr, nums) {
+        const history = loadHistory();
+        const numsStr = [...nums].sort((a,b) => a-b).join(',');
+        return history.some(item => item.expr === expr && item.numsStr === numsStr);
+    }
+    function addHistoryItem(expr, nums) {
+        const history = loadHistory();
+        const numsStr = [...nums].sort((a,b) => a-b).join(',');
+        if (history.some(item => item.expr === expr && item.numsStr === numsStr)) return false;
+        history.push({ expr, nums: [...nums], numsStr });
+        saveHistory(history);
+        renderHistory();
+        return true;
+    }
+    function clearHistory() {
+        if (confirm('确定要清空所有解答记录吗？')) {
+            localStorage.removeItem(STORAGE_KEY);
             renderHistory();
-            updateTitle();
-            const saved = loadNickname();
-            if (saved) nicknameInput.placeholder = saved;
-            setLoading(true);
-            await fetchProblems();
-            forceRender();
         }
+    }
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            if (m === '"') return '&quot;';
+            return m;
+        });
+    }
+    function renderHistory() {
+        const history = loadHistory();
+        if (history.length === 0) {
+            historyList.innerHTML = '<div class="text-center text-slate-400 dark:text-slate-500 text-sm py-4">暂无解答记录</div>';
+            return;
+        }
+        const reversed = [...history].reverse();
+        historyList.innerHTML = reversed.map(item => {
+            const numsDisplay = item.nums ? item.nums.join(', ') : '';
+            return `<div class="s1-history-item">
+                <span class="s1-expr">${escapeHtml(item.expr)}</span>
+                <span class="s1-nums" data-nums="${escapeHtml(item.numsStr)}">${escapeHtml(numsDisplay)}</span>
+            </div>`;
+        }).join('');
+        historyList.querySelectorAll('.s1-nums').forEach(el => {
+            el.addEventListener('click', () => {
+                const numsStr = el.getAttribute('data-nums');
+                if (!numsStr) return;
+                const target = numsStr.split(',').map(Number).sort((a,b) => a-b).join(',');
+                const idx = problems.findIndex(p => [...(p.problem || [])].sort((a,b) => a-b).join(',') === target);
+                if (idx !== -1) { currentIndex = idx; renderProblem(); }
+                else { setMessage('⚠️ 该题目不在当前题库中', '', 'warning'); }
+            });
+        });
+    }
 
-        init();
-    })();
+    // ---------- 有理数 ----------
+    function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = b; b = a % b; a = t; } return a || 1; }
+    function makeFrac(n, d) { if (d === 0) return null; if (d < 0) { n = -n; d = -d; } const g = gcd(n, d); return { n: n / g, d: d / g }; }
+    function fracAdd(a, b) { return makeFrac(a.n * b.d + b.n * a.d, a.d * b.d); }
+    function fracSub(a, b) { return makeFrac(a.n * b.d - b.n * a.d, a.d * b.d); }
+    function fracMul(a, b) { return makeFrac(a.n * b.n, a.d * b.d); }
+    function fracDiv(a, b) { if (b.n === 0) return null; return makeFrac(a.n * b.d, a.d * b.n); }
+    function fracEquals24(f) { return f && f.d !== 0 && f.n === 24 * f.d; }
+
+    function evalFraction(expr) {
+        let pos = 0; const len = expr.length;
+        function peek() { return pos < len ? expr[pos] : null; }
+        function next() { return pos < len ? expr[pos++] : null; }
+        function parseExpr() {
+            let left = parseTerm();
+            if (left === null) return null;
+            while (peek() === '+' || peek() === '-') {
+                const op = next(); const right = parseTerm();
+                if (right === null) return null;
+                left = op === '+' ? fracAdd(left, right) : fracSub(left, right);
+                if (left === null) return null;
+            }
+            return left;
+        }
+        function parseTerm() {
+            let left = parseFactor();
+            if (left === null) return null;
+            while (peek() === '*' || peek() === '/') {
+                const op = next(); const right = parseFactor();
+                if (right === null) return null;
+                left = op === '*' ? fracMul(left, right) : fracDiv(left, right);
+                if (left === null) return null;
+            }
+            return left;
+        }
+        function parseFactor() {
+            const ch = peek();
+            if (ch === null) return null;
+            if (ch === '(') { next(); const val = parseExpr(); if (val === null) return null; if (peek() !== ')') return null; next(); return val; }
+            if (ch === '-') { next(); const val = parseFactor(); if (val === null) return null; return makeFrac(-val.n, val.d); }
+            if (ch === '+') { next(); return parseFactor(); }
+            if (/\d/.test(ch)) { let numStr = ''; while (pos < len && /\d/.test(expr[pos])) numStr += expr[pos++]; return makeFrac(parseInt(numStr, 10), 1); }
+            return null;
+        }
+        const result = parseExpr();
+        if (result === null) return { ok: false, error: '表达式不合法' };
+        if (pos !== len) return { ok: false, error: '表达式含有多余字符' };
+        return { ok: true, value: result };
+    }
+
+    // ---------- 渲染 ----------
+    function tokenize(expr) {
+        const tokens = []; let i = 0;
+        while (i < expr.length) {
+            const ch = expr[i];
+            if (/\d/.test(ch)) { let numStr = ''; while (i < expr.length && /\d/.test(expr[i])) { numStr += expr[i]; i++; } tokens.push({ type: 'num', value: numStr }); }
+            else { tokens.push({ type: 'char', value: ch }); i++; }
+        }
+        return tokens;
+    }
+    function buildRenderHtml(expr, allowedNumbers, caretPos) {
+        if (expr === '') {
+            return `<span class="s1-fake-caret"></span><span class="s1-placeholder">例如: 8/(3-8/3)</span>`;
+        }
+        const tokens = tokenize(expr);
+        const allowedSet = new Set(allowedNumbers.map(n => String(n)));
+        let charIndex = 0; let caretInserted = false;
+        const parts = [];
+        for (const token of tokens) {
+            const start = charIndex; const end = charIndex + token.value.length;
+            let tokenHtml;
+            if (token.type === 'num') {
+                const cls = allowedSet.has(token.value) ? 's1-num-valid' : 's1-num-invalid';
+                tokenHtml = `<span class="${cls}">${escapeHtml(token.value)}</span>`;
+            } else { tokenHtml = escapeHtml(token.value); }
+            parts.push({ start, end, html: tokenHtml });
+            charIndex = end;
+        }
+        const caretHtml = '<span class="s1-fake-caret"></span>';
+        let result = ''; let lastEnd = 0;
+        for (const part of parts) {
+            if (!caretInserted && caretPos <= part.start) { result += caretHtml; caretInserted = true; }
+            result += part.html; lastEnd = part.end;
+        }
+        if (!caretInserted && caretPos >= lastEnd) result += caretHtml;
+        if (!caretInserted) result += caretHtml;
+        return result;
+    }
+    function updateRender() {
+        const expr = exprInput.value;
+        const nums = currentProblem ? currentProblem.problem : [];
+        const caretPos = exprInput.selectionStart ?? expr.length;
+        exprRender.innerHTML = buildRenderHtml(expr, nums, caretPos);
+    }
+    function clearHighlightTimer() { if (highlightTimer) { clearTimeout(highlightTimer); highlightTimer = null; } }
+    function scheduleRender() { clearHighlightTimer(); highlightTimer = setTimeout(() => { updateRender(); highlightTimer = null; }, RENDER_DELAY); }
+    function forceRender() { clearHighlightTimer(); updateRender(); }
+
+    // ---------- 过滤 ----------
+    function filterInput(value) {
+        let result = '';
+        for (let i = 0; i < value.length; i++) if (ALLOWED_CHARS.test(value[i])) result += value[i];
+        return result;
+    }
+    function handleInputFilter(e) {
+        const raw = exprInput.value;
+        const filtered = filterInput(raw);
+        if (raw !== filtered) {
+            const caretPos = exprInput.selectionStart;
+            let newCaret = 0;
+            for (let i = 0; i < caretPos && i < raw.length; i++) if (ALLOWED_CHARS.test(raw[i])) newCaret++;
+            exprInput.value = filtered;
+            exprInput.setSelectionRange(newCaret, newCaret);
+        }
+        const inputType = e.inputType || '';
+        const isDelete = inputType === 'deleteContentBackward' || inputType === 'deleteContentForward';
+        const currentLength = exprInput.value.length;
+        if (currentLength !== lastInputLength) resetToDefaultIfNotDefault();
+        lastInputLength = currentLength;
+        if (isDelete) forceRender(); else scheduleRender();
+    }
+
+    // ---------- 验证 ----------
+    function extractNumbers(expr) { return (expr.replace(/\s+/g, '').match(/\d+/g) || []).map(Number); }
+    function validateNumbersUsed(expr, allowedNumbers) {
+        const used = extractNumbers(expr).sort((a, b) => a - b);
+        const allowed = [...allowedNumbers].sort((a, b) => a - b);
+        if (allowed.length !== used.length) return false;
+        for (let i = 0; i < allowed.length; i++) if (allowed[i] !== used[i]) return false;
+        return true;
+    }
+    function safeEval(expr) {
+        const cleaned = expr.replace(/\s+/g, '');
+        if (cleaned === '') return { success: false, error: '表达式为空' };
+        if (!/^[0-9+\-*/()]+$/.test(cleaned)) return { success: false, error: '表达式只能包含数字和 + - * / ( )' };
+        const parsed = evalFraction(cleaned);
+        if (!parsed.ok) return { success: false, error: parsed.error || '表达式不合法或计算错误' };
+        const frac = parsed.value;
+        if (fracEquals24(frac)) return { success: true, value: frac };
+        let display = frac.d === 1 ? String(frac.n) : frac.n + '/' + frac.d;
+        if (frac.d !== 1) { const approx = frac.n / frac.d; if (Number.isFinite(approx)) display += ' (≈' + approx.toFixed(4) + ')'; }
+        return { success: false, error: '结果是 ' + display + '，不是 24', value: frac };
+    }
+
+    function renderProblem() {
+        if (!problems.length || currentIndex < 0 || currentIndex >= problems.length) {
+            numbersContainer.innerHTML = `
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+                <div class="s1-number-tile placeholder">?<span class="s1-card-label">CARD</span></div>
+            `;
+            authorDisplay.textContent = '—';
+            counterDisplay.textContent = '0 / 0';
+            exprInput.value = '';
+            exprRender.innerHTML = '';
+            lastInputLength = 0;
+            setMessage('题库中没有题目', '', 'error');
+            return;
+        }
+        const item = problems[currentIndex];
+        currentProblem = item;
+        const nums = item.problem || [];
+        const displayNums = [...nums];
+        while (displayNums.length < 4) displayNums.push('?');
+        if (displayNums.length > 4) displayNums.length = 4;
+        numbersContainer.innerHTML = displayNums.map(n =>
+            `<div class="s1-number-tile">${n}<span class="s1-card-label">CARD</span></div>`
+        ).join('');
+        authorDisplay.textContent = '作者：' + (item.author || 'unknown');
+        counterDisplay.textContent = (currentIndex + 1) + ' / ' + problems.length;
+        exprInput.value = '';
+        lastInputLength = 0;
+        exprInput.focus();
+        forceRender();
+        const p = makePrompt(nums);
+        setMessage(p.line1, p.line2, 'info');
+        updateNavButtons();
+        updateUrlProblemId(currentIndex);
+        jumpInput.placeholder = '1-' + problems.length;
+        jumpInput.max = problems.length;
+    }
+
+    // ---------- 解析 ----------
+    function stripComments(line) { const idx = line.indexOf('//'); return idx !== -1 ? line.substring(0, idx) : line; }
+    function parseProblems(text) {
+        const result = [];
+        const lines = text.split(/\r?\n/).map(stripComments).filter(line => line.trim() !== '');
+        const regex = /\{[^{}]*\}/g;
+        let match;
+        while ((match = regex.exec(lines.join(' '))) !== null) {
+            try {
+                const obj = JSON.parse(match[0]);
+                if (obj && Array.isArray(obj.problem)) {
+                    const nums = obj.problem.map(Number).filter(n => !isNaN(n));
+                    if (nums.length > 0) result.push({ problem: nums, author: obj.author || 'anonymous' });
+                }
+            } catch (e) { console.warn('跳过无法解析的对象:', match[0]); }
+        }
+        return result;
+    }
+
+    async function fetchProblems() {
+        setLoading(true);
+        setMessage('正在加载题库…', '', 'info');
+        try {
+            const response = await fetch(API_URL, { method: 'GET', headers: { 'Accept': 'text/plain, application/json' } });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const text = await response.text();
+            if (!text || text.trim() === '') throw new Error('笔记内容为空');
+            const parsed = parseProblems(text);
+            if (parsed.length === 0) throw new Error('未解析到有效题目');
+            problems = parsed;
+            const urlId = getProblemIdFromUrl();
+            currentIndex = (urlId !== null && urlId >= 1 && urlId <= problems.length) ? urlId - 1 : 0;
+            setLoading(false);
+            renderProblem();
+        } catch (err) {
+            console.warn('加载失败，使用内置题库:', err.message);
+            problems = FALLBACK_PROBLEMS;
+            currentIndex = 0;
+            setLoading(false);
+            renderProblem();
+        } finally {
+            if (problems.length > 0) { setLoading(false); updateNavButtons(); }
+        }
+    }
+
+    function handleSubmit() {
+        if (!currentProblem || problems.length === 0) { setMessage('没有题目可作答', '', 'error'); return; }
+        const rawExpr = exprInput.value.trim();
+        if (rawExpr === '') { setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error'); return; }
+        const expr = rawExpr.replace(/\s+/g, '');
+        if (!/^[0-9+\-*/()]+$/.test(expr)) { setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error'); return; }
+        const nums = currentProblem.problem || [];
+        if (!validateNumbersUsed(expr, nums)) { setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error'); return; }
+        const evalResult = safeEval(expr);
+        if (evalResult.success) {
+            if (historyContains(expr, nums)) setMessage('😅 虽然对了，但好像写过了……', '', 'warning');
+            else { setMessage('🎊 你答对了！', '', 'success'); addHistoryItem(expr, nums); }
+        } else setMessage('❌ 答错了，请检查格式或改动一下……', '', 'error');
+    }
+
+    function handleJump() {
+        if (!problems.length || isLoading) return;
+        const val = parseInt(jumpInput.value, 10);
+        if (isNaN(val) || val < 1 || val > problems.length) { setMessage('⚠️ 题号需在 1 到 ' + problems.length + ' 之间', '', 'warning'); return; }
+        currentIndex = val - 1;
+        renderProblem();
+        jumpInput.value = '';
+    }
+
+    function bindEvents() {
+        submitBtn.addEventListener('click', handleSubmit);
+        exprInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); handleSubmit(); }
+            if (e.key === 'Backspace' || e.key === 'Delete') setTimeout(() => { resetToDefaultIfNotDefault(); forceRender(); }, 0);
+        });
+        exprInput.addEventListener('input', handleInputFilter);
+        exprInput.addEventListener('keyup', (e) => { if (!['Backspace','Delete','Enter','='].includes(e.key)) forceRender(); });
+        exprInput.addEventListener('click', () => forceRender());
+        exprInput.addEventListener('select', () => forceRender());
+        exprInput.addEventListener('blur', () => { clearHighlightTimer(); updateRender(); });
+        exprContainer.addEventListener('click', (e) => { if (e.target !== exprInput) exprInput.focus(); });
+        prevBtn.addEventListener('click', () => { if (problems.length && !isLoading && currentIndex > 0) { currentIndex--; renderProblem(); } });
+        nextBtn.addEventListener('click', () => { if (problems.length && !isLoading && currentIndex < problems.length - 1) { currentIndex++; renderProblem(); } });
+        jumpBtn.addEventListener('click', handleJump);
+        jumpInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleJump(); } });
+        clearHistoryBtn.addEventListener('click', clearHistory);
+        nicknameBtn.addEventListener('click', handleSetNickname);
+        nicknameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSetNickname(); } });
+    }
+
+    function maybeExportSubmissions() {
+        const params = new URLSearchParams(window.location.search);
+        if ((params.get('submissions') || '').toLowerCase() !== 'text') return false;
+        const history = loadHistory();
+        const text = history.map(item => JSON.stringify({ problem: item.nums, solution: item.expr })).join('\n');
+        document.body.innerHTML = '';
+        document.body.style.cssText = 'margin:0;padding:1.5rem;background:#f5f7fa;font-family:system-ui,sans-serif;';
+        const pre = document.createElement('pre');
+        pre.textContent = '--- BEGIN SUBMISSIONS ---\n' + (text || '（暂无记录）') + '\n--- END SUBMISSIONS ---';
+        pre.style.cssText = 'margin:0;padding:1.5rem;background:#fff;border-radius:1rem;box-shadow:0 10px 30px -10px rgba(0,0,0,0.2);white-space:pre-wrap;word-break:break-all;font-family:"SF Mono","Fira Code",monospace;font-size:0.95rem;color:#1e2b36;line-height:1.6;';
+        document.body.appendChild(pre);
+        return true;
+    }
+
+    async function init() {
+        if (maybeExportSubmissions()) return;
+        applyNicknameFromUrl();
+        bindEvents();
+        renderHistory();
+        updateTitle();
+        const saved = loadNickname();
+        if (saved) nicknameInput.placeholder = saved;
+        setLoading(true);
+        await fetchProblems();
+        forceRender();
+    }
+
+    init();
+})();
 </script>
 </body>
 </html>

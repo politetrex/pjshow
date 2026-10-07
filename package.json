@@ -1,0 +1,23 @@
+{
+    "name": "pjshow",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "tailwindcss -i ./src/css/input.css -o ./src/css/tailwind.css --minify",
+        "watch": "tailwindcss -i ./src/css/input.css -o ./src/css/tailwind.css --watch"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/politetrex/pjshow.git"
+    },
+    "keywords": [],
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/politetrex/pjshow/issues"
+    },
+    "homepage": "https://github.com/politetrex/pjshow#readme",
+    "devDependencies": {
+        "tailwindcss": "^3.4.19"
+    }
+}
