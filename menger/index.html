@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menger Sponge — MRT edges (ShaderMaterial)</title>
+<style>
+  body { margin:0; overflow:hidden; background:#0a0a12; font-family:monospace; }
+  #hud {
+    position:absolute; top:12px; left:12px;
+    background:rgba(0,0,0,0.78); padding:10px 14px;
+    border-radius:6px; font-size:12px; line-height:1.55;
+    pointer-events:none; z-index:100;
+    border:1px solid #2a5a4a; color:#7fffd4; white-space:pre;
+  }
+  #perf {
+    position:absolute; top:12px; right:12px;
+    background:rgba(0,0,0,0.78); padding:6px 10px;
+    border-radius:6px; font-size:12px; color:#ffb86c; white-space:pre;
+  }
+  #help {
+    position:absolute; bottom:12px; left:12px;
+    background:rgba(0,0,0,0.78); padding:6px 10px;
+    border-radius:6px; font-size:12px; color:#aaa; white-space:pre;
+  }
+  #panel {
+    position:absolute; bottom:12px; right:12px;
+    background:rgba(0,0,0,0.78); padding:8px 12px;
+    border-radius:6px; font-size:12px; color:#ddd;
+    border:1px solid #2a5a4a;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  #panel label { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  #panel input[type=color] { width:36px; height:22px; border:none; background:none; cursor:pointer; padding:0; }
+  #panel input[type=range] { width:120px; }
+</style>
+</head>
+<body>
+<div id="hud"></div>
+<div id="perf"></div>
+<div id="help">drag = orbit   = / - = zoom</div>
+
+<div id="panel">
+  <label>base color <input type="color" id="baseColor" value="#3fa9ff"></label>
+  <label>edge color <input type="color" id="edgeColor" value="#000000"></label>
+  <label>edge thresh <input type="range" id="edgeThresh" min="0.01" max="0.3" step="0.01" value="0.05"></label>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const CUBE_SIZE   = 3;
+const MAX_LEVEL   = 10;
+const LOD_FACTOR  = 0.006;
+const CAPACITY    = 60000;
+const KEY_STEP    = 1.4;
+const WRITE_BUDGET_MS = 10;
+
+const settings = {
+  baseColor: new THREE.Color('#3fa9ff'),
+  edgeColor: new THREE.Color('#000000'),
+  edgeThreshold: 0.05,
+};
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: false,
+  powerPreference: 'high-performance',
+});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+renderer.setSize(innerWidth, innerHeight);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a12);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 1e-6, 1e9);
+camera.position.set(5, 4, 6);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enableZoom = false;
+controls.target.set(0, 0, 0);
+controls.minDistance = 0;
+controls.maxDistance = Infinity;
+
+// MRT render target
+const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, {
+  count: 2,
+  minFilter: THREE.NearestFilter,
+  magFilter: THREE.NearestFilter,
+  format: THREE.RGBAFormat,
+  type: THREE.UnsignedByteType,
+  depthBuffer: true,
+});
+console.log('MRT ready. textures:', rt.textures.length);
+
+const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+
+// ShaderMaterial with explicit MRT outputs — no built-in injection, no conflicts.
+const solidMat = new THREE.ShaderMaterial({
+  glslVersion: THREE.GLSL3,
+  uniforms: {
+    uBaseColor: { value: settings.baseColor },
+  },
+  vertexShader: /* glsl */`
+    out vec3 vInstOff;
+    out vec3 vNormalI;
+
+    void main() {
+      // instanceMatrix is provided by Three.js for InstancedMesh
+      vInstOff = instanceMatrix[3].xyz;
+      vNormalI = normalize(mat3(instanceMatrix) * normal);
+
+      vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: /* glsl */`
+    precision highp float;
+
+    in vec3 vInstOff;
+    in vec3 vNormalI;
+    uniform vec3 uBaseColor;
+
+    layout(location = 0) out vec4 outColor;
+    layout(location = 1) out vec4 outNormal;
+
+    void main() {
+      vec3 h = fract(vInstOff * 0.7853981 + vec3(0.31, 0.57, 0.83));
+      vec3 perturb = (h - 0.5) * 0.05;
+      vec3 n = normalize(vNormalI + perturb);
+
+      outColor  = vec4(uBaseColor, 1.0);
+      outNormal = vec4(n * 0.5 + 0.5, 1.0);
+    }
+  `,
+});
+
+const solid = new THREE.InstancedMesh(boxGeo, solidMat, CAPACITY);
+solid.frustumCulled = false;
+solid.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+solid.count = 0;
+scene.add(solid);
+
+const _dummy    = new THREE.Object3D();
+const _frustum  = new THREE.Frustum();
+const _projScr  = new THREE.Matrix4();
+const _sphere   = new THREE.Sphere();
+const _camPos   = new THREE.Vector3();
+const _tmpV     = new THREE.Vector3();
+const _camDir   = new THREE.Vector3();
+
+let pendingCount = 0;
+let pendX = new Float32Array(8192);
+let pendY = new Float32Array(8192);
+let pendZ = new Float32Array(8192);
+let pendS = new Float32Array(8192);
+
+function pushPending(x, y, z, s) {
+  if (pendingCount >= CAPACITY) return;
+  if (pendingCount >= pendX.length) {
+    const sz = pendX.length * 2;
+    const nx = new Float32Array(sz); nx.set(pendX); pendX = nx;
+    const ny = new Float32Array(sz); ny.set(pendY); pendY = ny;
+    const nz = new Float32Array(sz); nz.set(pendZ); pendZ = nz;
+    const ns = new Float32Array(sz); ns.set(pendS); pendS = ns;
+  }
+  pendX[pendingCount] = x;
+  pendY[pendingCount] = y;
+  pendZ[pendingCount] = z;
+  pendS[pendingCount] = s;
+  pendingCount++;
+}
+
+function isVisible(x, y, z, size) {
+  _sphere.center.set(x, y, z);
+  _sphere.radius = size * 0.8660254;
+  const camDist = _camPos.distanceTo(_sphere.center);
+  if (camDist < _sphere.radius) {
+    const toCenter = _tmpV.copy(_sphere.center).sub(_camPos);
+    return toCenter.dot(_camDir) > -_sphere.radius;
+  }
+  return _frustum.intersectsSphere(_sphere);
+}
+
+function emit(x, y, z, size, level, dist) {
+  if (!isVisible(x, y, z, size)) return;
+  const stopByLOD = (size / Math.max(dist, 1e-30)) < LOD_FACTOR;
+  const stopByCap = level >= MAX_LEVEL;
+  if (stopByLOD || stopByCap) {
+    pushPending(x, y, z, size);
+    return;
+  }
+  const s = size / 3;
+  for (let i = -1; i <= 1; i++)
+    for (let j = -1; j <= 1; j++)
+      for (let k = -1; k <= 1; k++) {
+        const zc = (i===0) + (j===0) + (k===0);
+        if (zc <= 1) {
+          const nx = x + i*s, ny = y + j*s, nz = z + k*s;
+          const nd = _camPos.distanceTo(_tmpV.set(nx, ny, nz));
+          emit(nx, ny, nz, s, level + 1, nd);
+        }
+      }
+}
+
+let writeCursor = 0;
+let writeTotal  = 0;
+
+function startWrite(total) { writeCursor = 0; writeTotal = total; solid.count = 0; }
+
+function stepWrite() {
+  if (writeCursor >= writeTotal) return true;
+  const t0 = performance.now();
+  while (writeCursor < writeTotal && performance.now() - t0 < WRITE_BUDGET_MS) {
+    const i = writeCursor;
+    _dummy.position.set(pendX[i], pendY[i], pendZ[i]);
+    const s = pendS[i];
+    _dummy.scale.set(s, s, s);
+    _dummy.updateMatrix();
+    solid.setMatrixAt(i, _dummy.matrix);
+    writeCursor++;
+  }
+  solid.count = writeCursor;
+  solid.instanceMatrix.needsUpdate = true;
+  return writeCursor >= writeTotal;
+}
+
+function emitVisible() {
+  camera.updateMatrixWorld();
+  _projScr.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  _frustum.setFromProjectionMatrix(_projScr);
+  _camPos.copy(camera.position);
+  _camDir.copy(controls.target).sub(_camPos).normalize();
+
+  pendingCount = 0;
+  const t0 = performance.now();
+  emit(0, 0, 0, CUBE_SIZE, 0, camera.position.length());
+  const emitMs = performance.now() - t0;
+  startWrite(pendingCount);
+
+  let minSize = Infinity;
+  for (let i = 0; i < pendingCount; i++) if (pendS[i] < minSize) minSize = pendS[i];
+  const deepestLevel = minSize < Infinity ? (-Math.log(minSize / CUBE_SIZE) / Math.log(3)) : 0;
+
+  document.getElementById('perf').textContent =
+    `emit    ${emitMs.toFixed(1)} ms\n` +
+    `visible ${pendingCount.toLocaleString()} / ${CAPACITY.toLocaleString()}\n` +
+    `level   ~${deepestLevel.toFixed(2)}`;
+}
+
+// Post-process
+const postScene = new THREE.Scene();
+const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const postGeo = new THREE.BufferGeometry();
+postGeo.setAttribute('position', new THREE.Float32BufferAttribute([-1,-1,0, 3,-1,0, -1,3,0], 3));
+postGeo.setAttribute('uv', new THREE.Float32BufferAttribute([0,0, 2,0, 0,2], 2));
+
+const postMat = new THREE.ShaderMaterial({
+  uniforms: {
+    tColor:  { value: rt.textures[0] },
+    tNormal: { value: rt.textures[1] },
+    resolution: { value: new THREE.Vector2(innerWidth, innerHeight) },
+    edgeColor:  { value: settings.edgeColor },
+    edgeThreshold: { value: settings.edgeThreshold },
+  },
+  vertexShader: /* glsl */`
+    varying vec2 vUv;
+    void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }
+  `,
+  fragmentShader: /* glsl */`
+    precision highp float;
+    uniform sampler2D tColor;
+    uniform sampler2D tNormal;
+    uniform vec2 resolution;
+    uniform vec3 edgeColor;
+    uniform float edgeThreshold;
+    varying vec2 vUv;
+
+    void main() {
+      vec2 texel = 1.0 / resolution;
+      vec3 tl = texture2D(tNormal, vUv + vec2(-1.0,  1.0) * texel).rgb;
+      vec3 t  = texture2D(tNormal, vUv + vec2( 0.0,  1.0) * texel).rgb;
+      vec3 tr = texture2D(tNormal, vUv + vec2( 1.0,  1.0) * texel).rgb;
+      vec3 l  = texture2D(tNormal, vUv + vec2(-1.0,  0.0) * texel).rgb;
+      vec3 r  = texture2D(tNormal, vUv + vec2( 1.0,  0.0) * texel).rgb;
+      vec3 bl = texture2D(tNormal, vUv + vec2(-1.0, -1.0) * texel).rgb;
+      vec3 b  = texture2D(tNormal, vUv + vec2( 0.0, -1.0) * texel).rgb;
+      vec3 br = texture2D(tNormal, vUv + vec2( 1.0, -1.0) * texel).rgb;
+
+      vec3 gx = (tr + 2.0*r + br) - (tl + 2.0*l + bl);
+      vec3 gy = (bl + 2.0*b + br) - (tl + 2.0*t + tr);
+      float g = length(gx) + length(gy);
+      float edge = smoothstep(edgeThreshold, edgeThreshold * 1.4, g);
+
+      vec3 base = texture2D(tColor, vUv).rgb;
+      gl_FragColor = vec4(mix(base, edgeColor, edge), 1.0);
+    }
+  `,
+  depthTest: false,
+  depthWrite: false,
+});
+const postQuad = new THREE.Mesh(postGeo, postMat);
+postQuad.frustumCulled = false;
+postScene.add(postQuad);
+
+const hudEl = document.getElementById('hud');
+const euler = new THREE.Euler();
+
+function updateHUD() {
+  const p = camera.position;
+  euler.setFromQuaternion(camera.quaternion, 'YXZ');
+  const yaw   = THREE.MathUtils.radToDeg(euler.y);
+  const pitch = THREE.MathUtils.radToDeg(euler.x);
+  const dist  = camera.position.distanceTo(controls.target);
+  const vFov  = THREE.MathUtils.degToRad(camera.fov);
+  const vh    = 2 * Math.tan(vFov / 2) * dist;
+  const vw    = vh * camera.aspect;
+
+  hudEl.textContent =
+`position  ${p.x.toFixed(8)}  ${p.y.toFixed(8)}  ${p.z.toFixed(8)}
+angles    yaw ${yaw.toFixed(2)}°  pitch ${pitch.toFixed(2)}°  fov ${camera.fov}°
+target    ${controls.target.x.toFixed(8)}  ${controls.target.y.toFixed(8)}  ${controls.target.z.toFixed(8)}
+distance  ${dist.toExponential(4)}
+view      ${vw.toExponential(3)} × ${vh.toExponential(3)}
+visible   ${pendingCount.toLocaleString()} / ${CAPACITY.toLocaleString()}`;
+}
+
+let needsEmit = true;
+controls.addEventListener('end', () => { needsEmit = true; });
+
+function stepZoom(factor) {
+  const dir = _tmpV.copy(camera.position).sub(controls.target);
+  const d = dir.length();
+  if (d < 1e-30) return;
+  dir.multiplyScalar(factor);
+  camera.position.copy(controls.target).add(dir);
+  camera.updateMatrixWorld();
+  needsEmit = true;
+}
+
+addEventListener('keydown', (e) => {
+  if (e.key === '=' || e.key === '+') { stepZoom(1 / KEY_STEP); e.preventDefault(); }
+  else if (e.key === '-' || e.key === '_') { stepZoom(KEY_STEP); e.preventDefault(); }
+});
+
+document.getElementById('baseColor').addEventListener('input', (e) => {
+  settings.baseColor.set(e.target.value);
+  solidMat.uniforms.uBaseColor.value.copy(settings.baseColor);
+});
+document.getElementById('edgeColor').addEventListener('input', (e) => {
+  settings.edgeColor.set(e.target.value);
+  postMat.uniforms.edgeColor.value.copy(settings.edgeColor);
+});
+document.getElementById('edgeThresh').addEventListener('input', (e) => {
+  settings.edgeThreshold = parseFloat(e.target.value);
+  postMat.uniforms.edgeThreshold.value = settings.edgeThreshold;
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+
+  if (needsEmit) { needsEmit = false; emitVisible(); }
+  if (writeCursor < writeTotal) stepWrite();
+
+  updateHUD();
+
+  renderer.setRenderTarget(rt);
+  renderer.clear();
+  renderer.render(scene, camera);
+
+  renderer.setRenderTarget(null);
+  renderer.render(postScene, postCamera);
+}
+
+emitVisible();
+requestAnimationFrame(animate);
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  rt.setSize(innerWidth, innerHeight);
+  postMat.uniforms.resolution.value.set(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

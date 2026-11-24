@@ -33,6 +33,7 @@
             }
         }
     </script>
+    <script src="../src/js/theme.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; overflow: hidden; }
@@ -192,7 +193,12 @@
     <div class="flex w-screen h-screen" id="app">
         <div class="w-64 flex-shrink-0 bg-white dark:bg-slate-800 flex flex-col gap-3 p-4 overflow-y-auto border-r border-slate-200 dark:border-slate-700 shadow-sm sidebar">
             <div class="s1-card">
-                <h3 class="s1-title text-sm">模式</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="s1-title text-sm mb-0">模式</h3>
+                    <button id="themeToggle" data-theme-toggle class="s1-btn s1-btn-secondary text-sm px-3 py-2 s1-no-print">
+                        <i id="themeIcon" class="fa fa-adjust"></i>
+                    </button>
+                </div>
                 <div class="flex gap-2">
                     <button id="modeEdit" class="flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-white transition-colors">编辑</button>
                     <button id="modeTest" class="flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition-colors">测试</button>
@@ -227,6 +233,7 @@
                         <button class="s1-tool-btn" data-tool="mirror">🪞 镜子</button>
                         <button class="s1-tool-btn" data-tool="receiver">🎯 接收器</button>
                         <button class="s1-tool-btn" data-tool="filter">🎨 滤镜</button>
+                        <button class="s1-tool-btn" data-tool="obstacle">🧱 障碍物</button>
                         <button class="s1-tool-btn" data-tool="erase">🗑️ 擦除</button>
                     </div>
                     <div class="text-xs text-slate-400 dark:text-slate-500 mt-2" id="toolHint">点击格子放置激光发射器</div>
@@ -294,6 +301,17 @@
                     <div class="s1-legend-item">
                         <div class="s1-legend-icon"><svg width="24" height="24" viewBox="0 0 30 30"><rect x="7" y="7" width="16" height="16" rx="2" fill="#00ffff" opacity="0.5"/></svg></div>
                         <div class="s1-legend-text"><strong>滤镜</strong>输出 = (初始 + 所有滤镜) / (n+1)</div>
+                    </div>
+                    <div class="s1-legend-item">
+                        <div class="s1-legend-icon">
+                            <svg width="24" height="24" viewBox="0 0 30 30">
+                                <rect x="6" y="6" width="18" height="18" rx="2" fill="#94a3b8" stroke="#475569" stroke-width="1.5"/>
+                                <line x1="9" y1="20" x2="20" y2="9" stroke="#475569" stroke-width="1.5"/>
+                                <line x1="13" y1="24" x2="24" y2="13" stroke="#475569" stroke-width="1.5"/>
+                                <line x1="5" y1="16" x2="16" y2="5" stroke="#475569" stroke-width="1.5"/>
+                            </svg>
+                        </div>
+                        <div class="s1-legend-text"><strong>障碍物</strong>阻挡并吸收激光</div>
                     </div>
                     <div class="text-xs text-slate-400 dark:text-slate-500 mt-3 pt-2 border-t border-slate-200 dark:border-slate-700">点击镜子切换朝向 · 悬浮激光线查看 HEX</div>
                 </div>
@@ -430,8 +448,9 @@
             const currentColor = computeOutputColor(baseColor, filterColors);
             finalColor = currentColor;
             path.push({ row, col, color: '#' + currentColor });
-            if (elem && elem.type === 'receiver') { hitReceiver = true; break; }
-            if (elem && elem.type === 'mirror') { const result = interactMirror(elem, dir); if (result.blocked) break; dir = result.newDir; }
+if (elem && elem.type === 'obstacle') break;   // 障碍物吸收激光
+if (elem && elem.type === 'receiver') { hitReceiver = true; break; }
+if (elem && elem.type === 'mirror') { const result = interactMirror(elem, dir); if (result.blocked) break; dir = result.newDir; }
         }
         return { path, hitReceiver, finalColor };
     }
@@ -530,7 +549,41 @@
                 ctx.beginPath(); ctx.arc(cx, cy, CELL_SIZE * 0.28, 0, 2 * Math.PI); ctx.stroke();
                 ctx.beginPath(); ctx.arc(cx, cy, CELL_SIZE * 0.12, 0, 2 * Math.PI);
                 ctx.fillStyle = win ? '#6bff8a' : '#ffb347'; ctx.fill();
-            } else if (elem.type === 'filter') {
+            } else if (elem.type === 'obstacle') {
+    const pad = Math.max(1, CELL_SIZE * 0.06);
+    ctx.save();
+    // 主体
+    ctx.fillStyle = isDark ? '#475569' : '#94a3b8';
+    ctx.strokeStyle = isDark ? '#1e293b' : '#64748b';
+    ctx.lineWidth = Math.max(1, CELL_SIZE * 0.04);
+    const r = Math.min(4, CELL_SIZE * 0.12);
+    const x0 = x + pad, y0 = y + pad, w0 = CELL_SIZE - pad * 2, h0 = CELL_SIZE - pad * 2;
+    // 圆角矩形
+    ctx.beginPath();
+    ctx.moveTo(x0 + r, y0);
+    ctx.lineTo(x0 + w0 - r, y0);
+    ctx.quadraticCurveTo(x0 + w0, y0, x0 + w0, y0 + r);
+    ctx.lineTo(x0 + w0, y0 + h0 - r);
+    ctx.quadraticCurveTo(x0 + w0, y0 + h0, x0 + w0 - r, y0 + h0);
+    ctx.lineTo(x0 + r, y0 + h0);
+    ctx.quadraticCurveTo(x0, y0 + h0, x0, y0 + h0 - r);
+    ctx.lineTo(x0, y0 + r);
+    ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // 斜线纹理
+    ctx.clip();
+    ctx.strokeStyle = isDark ? 'rgba(15,23,42,0.6)' : 'rgba(51,65,85,0.35)';
+    ctx.lineWidth = Math.max(1, CELL_SIZE * 0.05);
+    const step = Math.max(5, CELL_SIZE * 0.28);
+    for (let d = -CELL_SIZE; d < CELL_SIZE * 2; d += step) {
+        ctx.beginPath();
+        ctx.moveTo(x + d, y);
+        ctx.lineTo(x + d - CELL_SIZE, y + CELL_SIZE);
+        ctx.stroke();
+    }
+    ctx.restore(); } else if (elem.type === 'filter') {
                 const color = '#' + (elem.color || 'ffffff');
                 ctx.save(); ctx.globalAlpha = 0.5; ctx.fillStyle = color; ctx.shadowBlur = 10; ctx.shadowColor = color;
                 ctx.fillRect(x + 5, y + 5, CELL_SIZE - 10, CELL_SIZE - 10); ctx.restore();
@@ -550,6 +603,7 @@
         });
         ctx.shadowBlur = 0;
     }
+    window.addEventListener('pjshow:themechange', draw);
 
     function refresh() { computeLaser(); draw(); history.updateUI(); }
 
@@ -642,6 +696,7 @@
             } else { removeElementAt(row, col); elements.push({ type:'mirror', row, col, mirrorKind: activeMirrorKind === 'two-way' ? 'two-way' : 'one-way', orientation: activeMirrorKind === 'two-way' ? 'slash' : 'LEFT_UP' }); changed = true; }
         } else if (activeTool === 'receiver') { removeElementAt(row, col); elements.push({ type:'receiver', row, col }); changed = true; }
         else if (activeTool === 'filter') { removeElementAt(row, col); elements.push({ type:'filter', row, col, color: activeColor }); changed = true; }
+        else if (activeTool === 'obstacle') { removeElementAt(row, col); elements.push({ type:'obstacle', row, col }); changed = true; }
         if (changed) { history.push(); refresh(); }
     }
 
@@ -668,7 +723,8 @@
                 mirror: '点击放置镜子，再点切换朝向',
                 receiver: '点击格子放置接收器',
                 filter: '点击格子放置滤镜（Shift+点击改色）',
-                erase: '点击格子删除元素'
+                erase: '点击格子删除元素',
+                obstacle: '点击格子放置障碍物（吸收激光）',
             };
             document.getElementById('toolHint').textContent = hints[activeTool] || '';
             laserDirPanel.style.display = activeTool === 'laser' ? 'flex' : 'none';
@@ -726,7 +782,7 @@
 
     document.getElementById('exportBtn').addEventListener('click', () => {
         const data = {
-            version: 13, gridSize: GRID_SIZE,
+            version: 14, gridSize: GRID_SIZE,
             elements: elements.map(e => ({ type: e.type, row: e.row, col: e.col, dir: e.dir, color: e.color, mirrorKind: e.mirrorKind, orientation: e.orientation }))
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });

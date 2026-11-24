@@ -37,6 +37,7 @@
             }
         }
     </script>
+    <script src="../src/js/theme.js"></script>
 </head>
 <body class="bg-gray-50 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-5xl">
@@ -76,7 +77,7 @@
                         <button id="print-btn" class="s1-btn s1-btn-secondary">
                             <i class="fa fa-print mr-2"></i>打印练习
                         </button>
-                        <button id="themeToggle" class="s1-btn s1-btn-secondary" title="切换明暗模式">
+                        <button id="themeToggle" data-theme-toggle class="s1-btn s1-btn-secondary">
                             <i id="themeIcon" class="fa fa-moon-o"></i>
                         </button>
                     </div>
@@ -114,20 +115,6 @@
 // ============================================================
 let currentSeed = 0;
 let allAnswers = { oral: [], vertical: [], simplified: [] };
-
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
-function initThemeIcon() {
-    const isDark = document.documentElement.classList.contains('dark');
-    themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
-}
-themeToggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    initThemeIcon();
-});
-initThemeIcon();
 
 document.addEventListener('DOMContentLoaded', function() {
     setCurrentDateAndSeed();

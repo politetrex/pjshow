@@ -37,6 +37,7 @@
             }
         }
     </script>
+    <script src="../src/js/theme.js"></script>
     <style>
         .s1-number-tile {
             background: var(--s1-bg-card);
@@ -202,7 +203,7 @@
             <input type="text" id="nicknameInput" placeholder="昵称" maxlength="12"
                    class="px-3 py-1.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm w-28 dark:bg-slate-700 dark:text-slate-100">
             <button id="nicknameBtn" class="s1-btn s1-btn-primary text-sm px-4 py-1.5">设置</button>
-            <button id="themeToggle" class="s1-btn s1-btn-secondary text-sm px-3 py-1.5" title="切换明暗模式">
+            <button id="themeToggle" data-theme-toggle class="s1-btn s1-btn-secondary text-sm px-3 py-1.5">
                 <i id="themeIcon" class="fa fa-moon-o"></i>
             </button>
         </div>
@@ -303,22 +304,6 @@
     const nicknameInput = document.getElementById('nicknameInput');
     const nicknameBtn = document.getElementById('nicknameBtn');
     const widgetsCorner = document.getElementById('widgetsCorner');
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-
-    // ---------- 主题 ----------
-    function initThemeIcon() {
-        const isDark = document.documentElement.classList.contains('dark');
-        themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
-    }
-    themeToggle.addEventListener('click', () => {
-        document.documentElement.classList.toggle('dark');
-        const isDark = document.documentElement.classList.contains('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        initThemeIcon();
-    });
-    initThemeIcon();
-
     // ---------- 昵称 ----------
     function loadNickname() { try { return localStorage.getItem(NICKNAME_KEY) || ''; } catch (e) { return ''; } }
     function saveNickname(name) { try { localStorage.setItem(NICKNAME_KEY, name); } catch (e) {} }

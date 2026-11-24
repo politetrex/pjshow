@@ -1,0 +1,446 @@
+html {
+    scroll-behavior: smooth;
+  }
+
+:root {
+    color-scheme: light;
+    --page-background: #dfe9f3;
+    --page-text: #222;
+    --header-background: linear-gradient(to right, lightblue, lawngreen, gold, lightcoral);
+    --footer-background: rgba(0, 0, 0, 0.5);
+    --footer-text: white;
+    --footer-link: white;
+    --field-background: white;
+    --field-text: #222;
+    --field-border: #767676;
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --page-background: #171b24;
+    --page-text: #f1f3f5;
+    --header-background: linear-gradient(to right, #263848, #304b33, #50471e, #512c31);
+    --footer-background: #10131a;
+    --footer-text: #f1f3f5;
+    --footer-link: #b9d8ff;
+    --field-background: #242a35;
+    --field-text: #f1f3f5;
+    --field-border: #aab4c0;
+}
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, background-image 0.3s ease,
+        color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease,
+        fill 0.3s ease, stroke 0.3s ease;
+  }
+  
+  .scroll-top {
+    position: fixed;
+    bottom: 150px;
+    right: -150px;
+    color: black;
+    padding: 0.7em 1em;
+    border: none;
+    border-radius: 10px 0 0 10px;
+    text-decoration: none;
+    font-size: 1.2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, right 0.3s ease;
+    z-index: 1001;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to bottom right, #add8e6, #7cfc00, #ffd700, #f08080); /* lightblue, lawngreen, gold, lightcoral */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    width: 150px;
+  }
+  
+  .scroll-top:hover {
+    right: 0px;
+  }
+  
+  .scroll-top.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-repeat: repeat;
+    background-size: 200px;
+    background-attachment: fixed;
+    background-color: var(--page-background);
+    margin: 0;
+    padding: 0;
+    color: var(--page-text);
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    /* background: rgba(255, 255, 255, 0.5); optional veil */
+    z-index: -1;
+}
+
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--header-background);
+    padding: 30px;
+}
+
+header .home, header .releases, header .theme-toggle {
+    align-self: flex-start;
+    margin-top: 0;       /* Remove default spacing above */
+    margin-bottom: 10px; /* Keep some space below */
+    font-size: 14px;
+    text-align: left;
+    color: white;
+    border: 4px solid darkseagreen;
+    border-radius: 5px;
+    padding: 5px;
+    text-decoration: none;
+    transition: background 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    background-color: darkolivegreen;
+}
+
+header .home:hover, header .releases:hover, header .theme-toggle:hover,
+header .home:focus, header .releases:focus, header .theme-toggle:focus {
+    border-color: darkolivegreen;
+    background-color: darkseagreen;
+    color: black;
+}
+
+header nav{
+    display: flex; gap: 10px;
+}
+
+header .theme-toggle {
+    cursor: pointer;
+    font-family: inherit;
+    line-height: normal;
+    min-height: 0;
+    transition: background 0.3s ease, background-color 0.3s ease,
+        border-color 0.3s ease, border-radius 0.3s ease, color 0.3s ease,
+        width 0.3s ease, height 0.3s ease, padding 0.3s ease;
+}
+
+header .theme-toggle:hover,
+header .theme-toggle:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin: 0;
+}
+
+section {
+    border: 10px solid;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 20px;
+}
+
+section h2 {
+    margin-top: 0;
+}
+
+input[type="text"] {
+    padding: 10px;
+    margin: 5px;
+    font-size: 1em;
+    border: 1px solid var(--field-border);
+    background: var(--field-background);
+    color: var(--field-text);
+}
+
+input[type="text"]::placeholder {
+    color: color-mix(in srgb, var(--field-text) 65%, transparent);
+}
+
+button {
+    padding: 10px 20px;
+    margin-top: 5px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+.fire { border-color: red; background-color: lightcoral; color: white; }
+.sun { border-color: gold; background-color: lemonchiffon; color: black; }
+.forest { border-color: forestgreen; background-color: honeydew; color: darkgreen; }
+.space { border-color: navy; background-color: rgb(65, 65, 147); color: white; }
+/*links should be colored too*/
+.fire a,
+.fire a:visited {
+    color: white;
+    position: relative;
+}
+
+.sun a,
+.sun a:visited {
+    color: black;
+    position: relative;
+}
+
+.forest a,
+.forest a:visited {
+    color: darkgreen;
+    position: relative;
+}
+
+.space a,
+.space a:visited {
+    color: white;
+    position: relative;
+}
+
+/* Optional hover for clarity */
+.fire a:hover,
+.sun a:hover,
+.forest a:hover,
+.space a:hover {
+    text-decoration: underline;
+}
+
+/*look buttons*/
+.fire a.tryit, .fire a.more-info,
+.sun a.tryit, .sun a.more-info,
+.forest a.tryit, .forest a.more-info,
+.space a.tryit, .space a.more-info {
+    background-color: blue;
+    padding: 5px;
+    border: 3px solid skyblue;
+    border-radius: 3px;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+/*these are clickable...*/
+.fire a.tryit:hover, .fire a.more-info:hover,
+.sun a.tryit:hover, .sun a.more-info:hover,
+.forest a.tryit:hover, .forest a.more-info:hover,
+.space a.tryit:hover, .space a.more-info:hover,
+.fire a.tryit:focus, .fire a.more-info:focus,
+.sun a.tryit:focus, .sun a.more-info:focus,
+.forest a.tryit:focus, .forest a.more-info:focus,
+.space a.tryit:focus, .space a.more-info:focus {
+    background-color: skyblue;
+    border-color: blue;
+    outline: none;
+    color: black;
+    cursor: pointer;
+}
+
+.result {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+button {
+    position: relative;
+    z-index: 1;
+  }
+
+  
+button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: auto; /* Important: keep events enabled */
+}
+
+.js-edit-box {
+    display: block;
+  }
+
+  .js-edit-box:empty {
+    display: none;
+  }
+  
+
+html, body {
+    height: 100%;
+    margin: 0;
+  }
+  
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page-wrapper {
+    flex: 1;
+  }
+  
+  footer {
+    min-height: 150px;
+    background-color: var(--footer-background);
+    border-top: purple solid 5px;
+    padding: 20px;
+    color: var(--footer-text);
+    min-width: 0;
+  }
+  
+  footer a {
+    color: var(--footer-link);
+  }
+
+  footer p,
+  footer a {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+html[data-theme="dark"] body {
+    background-blend-mode: multiply;
+}
+
+html[data-theme="dark"] .fire {
+    border-color: #e87979;
+    background-color: #592b30;
+    color: #fff;
+}
+
+html[data-theme="dark"] .sun {
+    border-color: #d4b83a;
+    background-color: #574d23;
+    color: #fff;
+}
+
+html[data-theme="dark"] .forest {
+    border-color: #68a879;
+    background-color: #233c2b;
+    color: #e8f5e9;
+}
+
+html[data-theme="dark"] .space {
+    border-color: #8490eb;
+    background-color: #252b55;
+    color: #fff;
+}
+
+html[data-theme="dark"] .fire a,
+html[data-theme="dark"] .sun a,
+html[data-theme="dark"] .forest a,
+html[data-theme="dark"] .space a {
+    color: inherit;
+}
+
+html[data-theme="dark"] .fire a.tryit,
+html[data-theme="dark"] .fire a.more-info,
+html[data-theme="dark"] .sun a.tryit,
+html[data-theme="dark"] .sun a.more-info,
+html[data-theme="dark"] .forest a.tryit,
+html[data-theme="dark"] .forest a.more-info,
+html[data-theme="dark"] .space a.tryit,
+html[data-theme="dark"] .space a.more-info,
+html[data-theme="dark"] .fire a.tryit:hover,
+html[data-theme="dark"] .fire a.more-info:hover,
+html[data-theme="dark"] .sun a.tryit:hover,
+html[data-theme="dark"] .sun a.more-info:hover,
+html[data-theme="dark"] .forest a.tryit:hover,
+html[data-theme="dark"] .forest a.more-info:hover,
+html[data-theme="dark"] .space a.tryit:hover,
+html[data-theme="dark"] .space a.more-info:hover {
+    color: white;
+}
+
+html[data-theme="dark"] button:not(.theme-toggle) {
+    background: #303846;
+    border: 1px solid #aab4c0;
+    color: #f1f3f5;
+}
+
+html[data-theme="dark"] button:not(.theme-toggle):hover,
+html[data-theme="dark"] button:not(.theme-toggle):focus-visible {
+    background: #424d5f;
+}
+
+html[data-theme="dark"] .scroll-top {
+    color: #111;
+  }
+
+@media (max-width: 600px) {
+    header {
+        padding: 20px 12px;
+    }
+
+    header nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    header .theme-toggle {
+        align-self: center;
+        display: grid;
+        place-items: center;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        min-height: 44px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 0;
+        text-align: center;
+    }
+
+    header .theme-toggle .theme-label {
+        display: none;
+    }
+
+    header .theme-toggle::before {
+        content: attr(data-theme-icon);
+        font-size: 20px;
+    }
+
+    h1 {
+        max-width: 100%;
+        font-size: clamp(1.75rem, 8vw, 2.5rem);
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
+
+    section {
+        margin: 12px;
+        padding: 16px;
+        border-width: 6px;
+    }
+
+    section,
+    section * {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    input[type="text"] {
+        width: calc(100% - 10px);
+        min-height: 44px;
+        margin: 5px;
+    }
+
+    button {
+        min-height: 44px;
+    }
+
+    .scroll-top {
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        max-width: calc(100vw - 24px);
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+}

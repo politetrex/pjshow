@@ -33,6 +33,7 @@
             }
         }
     </script>
+    <script src="../src/js/theme.js"></script>
     <style>
         .s1-play-btn {
             width: 6rem; height: 6rem; border-radius: 50%;
@@ -101,7 +102,7 @@
                     <button class="s1-lang-btn active" data-lang="en" id="langEn">EN</button>
                     <button class="s1-lang-btn" data-lang="zh" id="langZh">中文</button>
                 </div>
-                <button class="s1-btn s1-btn-secondary text-sm px-3 py-1.5" id="themeToggle" title="切换明暗模式">
+                <button class="s1-btn s1-btn-secondary text-sm px-3 py-1.5" id="themeToggle" data-theme-toggle>
                     <i id="themeIcon" class="fa fa-moon-o"></i>
                 </button>
             </div>
@@ -167,25 +168,11 @@
     const langEn = document.getElementById('langEn');
     const langZh = document.getElementById('langZh');
     const langIndicator = document.getElementById('langIndicator');
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
 
     const i18n = {
         en: { title: 'Metronome', bpmUnit: 'BPM', statusStopped: 'stopped', statusPlaying: 'playing', tap: 'TAP', play: '▶', stop: '■', langIndicator: 'EN' },
         zh: { title: '节拍器', bpmUnit: '拍/分钟', statusStopped: '已停止', statusPlaying: '播放中', tap: '点击', play: '▶', stop: '■', langIndicator: '中文' }
     };
-
-    function initThemeIcon() {
-        const isDark = document.documentElement.classList.contains('dark');
-        themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
-    }
-    themeToggle.addEventListener('click', () => {
-        document.documentElement.classList.toggle('dark');
-        const isDark = document.documentElement.classList.contains('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        initThemeIcon();
-    });
-    initThemeIcon();
 
     function updateLanguage(lang) {
         currentLang = lang;

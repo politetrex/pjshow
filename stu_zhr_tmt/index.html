@@ -21,6 +21,7 @@
             }
         })();
     </script>
+    <script src="../src/js/theme.js"></script>
     <style>
         /* ============ 值日表页面独有样式 ============ */
         .s1-highlight-today {
@@ -232,7 +233,7 @@
                         <p id="current-date" class="text-2xl font-bold text-primary"></p>
                         <p id="current-day" class="text-lg text-gray-700 dark:text-slate-300"></p>
                     </div>
-                    <button id="themeToggle" class="s1-btn s1-btn-secondary text-sm px-3 py-2 s1-no-print" title="切换明暗模式">
+                    <button id="themeToggle" data-theme-toggle class="s1-btn s1-btn-secondary text-sm px-3 py-2 s1-no-print">
                         <i id="themeIcon" class="fa fa-moon-o"></i>
                     </button>
                 </div>
@@ -337,20 +338,6 @@ import {dutyData} from "./duties.js"
 const now = new Date();
 let currentDate = new Date(now);
 let displayWeekOffset = 0;
-
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
-function initThemeIcon() {
-    const isDark = document.documentElement.classList.contains('dark');
-    themeIcon.className = isDark ? 'fa fa-sun-o' : 'fa fa-moon-o';
-}
-themeToggle.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    initThemeIcon();
-});
-initThemeIcon();
 
 function formatDate(date) {
     return date.toISOString().split('T')[0];

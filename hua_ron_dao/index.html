@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数字华容道 · 可调色与尺寸</title>
+
+<link rel="stylesheet" href="../src/css/s1.css">
+<link rel="stylesheet" href="../src/css/tailwind.css">
+
+<style>
+/* ========== 华容道配色（由 JS 动态写入 CSS 变量） ========== */
+:root {
+    --hr-tile-bg: #3b82f6;
+    --hr-tile-text: #ffffff;
+    --hr-empty-border: #cbd5e1;
+    --hr-board-bg: #f1f5f9;
+    --hr-board-border: #e2e8f0;
+}
+
+.dark {
+    --hr-board-bg: #1e293b;
+    --hr-board-border: #334155;
+    --hr-empty-border: #475569;
+}
+
+/* ========== 布局 ========== */
+.hr-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.hr-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.hr-size-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--s1-neutral);
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    border: 1px solid var(--s1-border);
+}
+.dark .hr-size-control {
+    background: #334155;
+}
+
+.hr-size-control label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--s1-text);
+}
+
+.hr-size-control input[type="number"] {
+    width: 3.2rem;
+    padding: 0.3rem 0.4rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--s1-border);
+    background: var(--s1-bg-card);
+    color: var(--s1-text);
+    font-weight: 600;
+    text-align: center;
+    font-size: 0.95rem;
+    outline: none;
+}
+.hr-size-control input[type="number"]:focus {
+    border-color: var(--s1-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* 颜色选择器容器 */
+.hr-color-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--s1-neutral);
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    border: 1px solid var(--s1-border);
+}
+.dark .hr-color-picker {
+    background: #334155;
+}
+
+.hr-color-picker label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--s1-text);
+}
+
+/* 原生颜色输入框 */
+.hr-color-picker input[type="color"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 2.4rem;
+    height: 2.4rem;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    outline: none;
+}
+.hr-color-picker input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+.hr-color-picker input[type="color"]::-webkit-color-swatch {
+    border: 2px solid var(--s1-border);
+    border-radius: 50%;
+}
+.hr-color-picker input[type="color"]::-moz-color-swatch {
+    border: 2px solid var(--s1-border);
+    border-radius: 50%;
+}
+
+/* ========== 棋盘 ========== */
+.hr-board {
+    display: grid;
+    gap: 0.5rem;
+    background: var(--hr-board-bg);
+    padding: 0.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--hr-board-border);
+    touch-action: none;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.hr-tile {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: clamp(1.1rem, 4.5vw, 2rem);
+    color: var(--hr-tile-text);
+    background: var(--hr-tile-bg);
+    border-radius: 0.6rem;
+    cursor: grab;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+    transform: translateY(-2px);
+    transition: background 0.15s, color 0.15s, transform 0.08s, box-shadow 0.08s;
+    user-select: none;
+    will-change: transform;
+}
+.hr-tile:active {
+    cursor: grabbing;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+    transform: translateY(2px);
+}
+.hr-tile.empty {
+    background: transparent;
+    border: 1px dashed var(--hr-empty-border);
+    box-shadow: none;
+    cursor: default;
+    transform: none;
+    opacity: 0.7;
+}
+.hr-tile.empty:active {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 胜利提示 */
+.hr-win {
+    color: var(--s1-success);
+    font-weight: 700;
+    font-size: 1.1rem;
+    min-height: 1.8rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.hr-win.show {
+    opacity: 1;
+}
+</style>
+
+<script>
+/* 应用保存的深色模式与配色（在页面渲染前） */
+(function() {
+    const savedDark = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedDark === 'dark' || (!savedDark && prefersDark)) {
+        document.documentElement.classList.add('dark');
+    }
+
+    // 应用保存的方块颜色 / 文字颜色
+    const tileBg = localStorage.getItem('hr-tile-bg');
+    const tileText = localStorage.getItem('hr-tile-text');
+    if (tileBg) document.documentElement.style.setProperty('--hr-tile-bg', tileBg);
+    if (tileText) document.documentElement.style.setProperty('--hr-tile-text', tileText);
+})();
+</script>
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen">
+
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+
+    <header class="mb-6">
+        <h1 class="text-3xl font-bold text-accent dark:text-blue-300 mb-2">数字华容道</h1>
+        <p class="text-slate-600 dark:text-slate-400">拖动或按方向键移动 · 自定义尺寸与颜色</p>
+    </header>
+
+    <div class="s1-card mb-6">
+        <div class="hr-wrapper">
+
+            <!-- 控制栏 -->
+            <div class="hr-controls">
+
+                <!-- 尺寸 -->
+                <div class="hr-size-control">
+                    <label>宽</label>
+                    <input type="number" id="colsInput" min="2" max="8" value="4" step="1">
+                    <label>高</label>
+                    <input type="number" id="rowsInput" min="2" max="8" value="4" step="1">
+                    <button id="resizeBtn" class="s1-btn s1-btn-primary" style="padding:0.3rem 1rem;">调整</button>
+                </div>
+
+                <!-- 方块颜色 -->
+                <div class="hr-color-picker">
+                    <label>方块</label>
+                    <input type="color" id="tileColorInput" value="#3b82f6">
+                    <label>文字</label>
+                    <input type="color" id="textColorInput" value="#ffffff">
+                </div>
+
+                <!-- 重置 -->
+                <button id="resetBtn" class="s1-btn s1-btn-secondary" style="padding:0.3rem 1rem;">
+                    <i class="fa fa-refresh mr-1"></i>重新开始
+                </button>
+
+                <!-- 深色/浅色 -->
+                <button id="darkToggle" class="s1-btn s1-btn-secondary" style="padding:0.3rem 1rem;">
+                    <i class="fa fa-moon-o mr-1"></i>深色
+                </button>
+            </div>
+
+            <!-- 棋盘 -->
+            <div class="hr-board" id="board"></div>
+
+            <!-- 胜利 -->
+            <div class="hr-win" id="winMessage">🎉 恭喜！你完成了！ 🎉</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    // ================= 状态 =================
+    let cols = 4;
+    let rows = 4;
+    let tiles = [];
+    let emptyIndex = 0;
+    let tileElements = [];
+
+    const boardEl = document.getElementById('board');
+    const winMessageEl = document.getElementById('winMessage');
+    const colsInput = document.getElementById('colsInput');
+    const rowsInput = document.getElementById('rowsInput');
+    const resizeBtn = document.getElementById('resizeBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const darkToggle = document.getElementById('darkToggle');
+    const tileColorInput = document.getElementById('tileColorInput');
+    const textColorInput = document.getElementById('textColorInput');
+
+    // ================= 工具 =================
+    const getIndex = (r, c) => r * cols + c;
+
+    function checkWin() {
+        const total = rows * cols;
+        if (tiles[total - 1] !== 0) return false;
+        for (let i = 0; i < total - 1; i++) {
+            if (tiles[i] !== i + 1) return false;
+        }
+        return true;
+    }
+
+    function updateWinMessage() {
+        if (checkWin()) winMessageEl.classList.add('show');
+        else winMessageEl.classList.remove('show');
+    }
+
+    // ================= 可解性打乱 =================
+    function countInversions(array) {
+        let inv = 0;
+        const nums = array.filter(v => v !== 0);
+        for (let i = 0; i < nums.length; i++) {
+            for (let j = i + 1; j < nums.length; j++) {
+                if (nums[i] > nums[j]) inv++;
+            }
+        }
+        return inv;
+    }
+
+    function isSolvable(array, cols, rows) {
+        const inv = countInversions(array);
+        const emptyIdx = array.indexOf(0);
+        const emptyRow = Math.floor(emptyIdx / cols);
+        const emptyRowFromBottom = rows - emptyRow;
+        return (inv + emptyRowFromBottom) % 2 === 0;
+    }
+
+    function generateSolvableShuffle() {
+        const total = rows * cols;
+        let arr = [];
+        for (let i = 1; i < total; i++) arr.push(i);
+        arr.push(0);
+
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+
+        if (!isSolvable(arr, cols, rows)) {
+            const nonEmpty = [];
+            for (let i = 0; i < arr.length; i++) if (arr[i] !== 0) nonEmpty.push(i);
+            if (nonEmpty.length >= 2) {
+                const i1 = nonEmpty[0], i2 = nonEmpty[1];
+                [arr[i1], arr[i2]] = [arr[i2], arr[i1]];
+            }
+        }
+
+        // 避免开局即胜利
+        let solved = true;
+        for (let i = 0; i < total - 1; i++) {
+            if (arr[i] !== i + 1) { solved = false; break; }
+        }
+        if (solved && arr[total - 1] === 0) {
+            const nonEmpty = [];
+            for (let i = 0; i < arr.length; i++) if (arr[i] !== 0) nonEmpty.push(i);
+            if (nonEmpty.length >= 2) {
+                const i1 = nonEmpty[0], i2 = nonEmpty[1];
+                [arr[i1], arr[i2]] = [arr[i2], arr[i1]];
+            }
+        }
+
+        return arr;
+    }
+
+    // ================= 渲染 =================
+    function renderBoard() {
+        boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        boardEl.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+        boardEl.innerHTML = '';
+        tileElements = new Array(rows * cols);
+
+        const total = rows * cols;
+        for (let i = 0; i < total; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'hr-tile';
+            const v = tiles[i];
+            if (v === 0) {
+                tile.classList.add('empty');
+            } else {
+                tile.textContent = v;
+            }
+            tile.dataset.index = i;
+            tileElements[i] = tile;
+
+            tile.addEventListener('mousedown', handleDragStart);
+            tile.addEventListener('touchstart', handleTouchStart, { passive: false });
+
+            boardEl.appendChild(tile);
+        }
+        updateWinMessage();
+    }
+
+    function updateTilesContent() {
+        const total = rows * cols;
+        for (let i = 0; i < total; i++) {
+            const tile = tileElements[i];
+            const v = tiles[i];
+            if (v === 0) {
+                tile.classList.add('empty');
+                tile.textContent = '';
+            } else {
+                tile.classList.remove('empty');
+                tile.textContent = v;
+            }
+            tile.dataset.index = i;
+        }
+        updateWinMessage();
+    }
+
+    // ================= 初始化 =================
+    function initGame() {
+        tiles = generateSolvableShuffle();
+        emptyIndex = tiles.indexOf(0);
+        renderBoard();
+    }
+
+    // ================= 移动 =================
+    function getMovableIndices(emptyIdx) {
+        const row = Math.floor(emptyIdx / cols);
+        const col = emptyIdx % cols;
+        const neighbors = [];
+        if (row > 0) neighbors.push(getIndex(row - 1, col));
+        if (row < rows - 1) neighbors.push(getIndex(row + 1, col));
+        if (col > 0) neighbors.push(getIndex(row, col - 1));
+        if (col < cols - 1) neighbors.push(getIndex(row, col + 1));
+        return neighbors;
+    }
+
+    function tryMoveTile(tileIdx) {
+        if (tileIdx === emptyIndex) return false;
+        const movable = getMovableIndices(emptyIndex);
+        if (!movable.includes(tileIdx)) return false;
+        tiles[emptyIndex] = tiles[tileIdx];
+        tiles[tileIdx] = 0;
+        emptyIndex = tileIdx;
+        updateTilesContent();
+        return true;
+    }
+
+    function moveByDirection(dir) {
+        const row = Math.floor(emptyIndex / cols);
+        const col = emptyIndex % cols;
+        let targetIdx = -1;
+        switch (dir) {
+            case 'up':    if (row < rows - 1) targetIdx = getIndex(row + 1, col); break;
+            case 'down':  if (row > 0)        targetIdx = getIndex(row - 1, col); break;
+            case 'left':  if (col < cols - 1) targetIdx = getIndex(row, col + 1); break;
+            case 'right': if (col > 0)        targetIdx = getIndex(row, col - 1); break;
+        }
+        if (targetIdx !== -1) tryMoveTile(targetIdx);
+    }
+
+    // ================= 键盘 =================
+    function handleKeyDown(e) {
+        const key = e.key;
+        if (key.startsWith('Arrow')) e.preventDefault();
+        switch (key) {
+            case 'ArrowUp':    moveByDirection('up'); break;
+            case 'ArrowDown':  moveByDirection('down'); break;
+            case 'ArrowLeft':  moveByDirection('left'); break;
+            case 'ArrowRight': moveByDirection('right'); break;
+            default: return;
+        }
+    }
+
+    // ================= 鼠标拖动 =================
+    let dragStartIndex = -1;
+
+    function handleDragStart(e) {
+        e.preventDefault();
+        const idx = parseInt(e.currentTarget.dataset.index, 10);
+        if (tiles[idx] === 0) return;
+        dragStartIndex = idx;
+        document.addEventListener('mouseup', handleDragEnd, { once: true });
+    }
+
+    function handleDragEnd(e) {
+        if (dragStartIndex === -1) return;
+        const startIdx = dragStartIndex;
+        dragStartIndex = -1;
+
+        const startTile = tileElements[startIdx];
+        if (!startTile) return;
+        const rect = startTile.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+
+        if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+
+        let direction;
+        if (Math.abs(dx) > Math.abs(dy)) direction = dx > 0 ? 'right' : 'left';
+        else direction = dy > 0 ? 'down' : 'up';
+
+        const startRow = Math.floor(startIdx / cols);
+        const startCol = startIdx % cols;
+        let tr = startRow, tc = startCol;
+        if (direction === 'up') tr -= 1;
+        if (direction === 'down') tr += 1;
+        if (direction === 'left') tc -= 1;
+        if (direction === 'right') tc += 1;
+
+        if (tr < 0 || tr >= rows || tc < 0 || tc >= cols) return;
+        const targetIdx = getIndex(tr, tc);
+        if (tiles[targetIdx] === 0) {
+            tiles[targetIdx] = tiles[startIdx];
+            tiles[startIdx] = 0;
+            emptyIndex = startIdx;
+            updateTilesContent();
+        }
+    }
+
+    // ================= 触摸拖动 =================
+    function handleTouchStart(e) {
+        e.preventDefault();
+        const idx = parseInt(e.currentTarget.dataset.index, 10);
+        if (tiles[idx] === 0) return;
+        dragStartIndex = idx;
+
+        const touch = e.touches[0];
+        const startX = touch.clientX;
+        const startY = touch.clientY;
+
+        function touchEnd(ev) {
+            ev.preventDefault();
+            if (dragStartIndex === -1) {
+                document.removeEventListener('touchend', touchEnd);
+                return;
+            }
+            const endTouch = ev.changedTouches[0];
+            if (!endTouch) {
+                dragStartIndex = -1;
+                document.removeEventListener('touchend', touchEnd);
+                return;
+            }
+
+            const startTile = tileElements[dragStartIndex];
+            if (!startTile) {
+                dragStartIndex = -1;
+                document.removeEventListener('touchend', touchEnd);
+                return;
+            }
+            const rect = startTile.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = endTouch.clientX - cx;
+            const dy = endTouch.clientY - cy;
+
+            if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+                dragStartIndex = -1;
+                document.removeEventListener('touchend', touchEnd);
+                return;
+            }
+
+            let direction;
+            if (Math.abs(dx) > Math.abs(dy)) direction = dx > 0 ? 'right' : 'left';
+            else direction = dy > 0 ? 'down' : 'up';
+
+            const startRow = Math.floor(dragStartIndex / cols);
+            const startCol = dragStartIndex % cols;
+            let tr = startRow, tc = startCol;
+            if (direction === 'up') tr -= 1;
+            if (direction === 'down') tr += 1;
+            if (direction === 'left') tc -= 1;
+            if (direction === 'right') tc += 1;
+
+            if (tr < 0 || tr >= rows || tc < 0 || tc >= cols) {
+                dragStartIndex = -1;
+                document.removeEventListener('touchend', touchEnd);
+                return;
+            }
+            const targetIdx = getIndex(tr, tc);
+            if (tiles[targetIdx] === 0) {
+                tiles[targetIdx] = tiles[dragStartIndex];
+                tiles[dragStartIndex] = 0;
+                emptyIndex = dragStartIndex;
+                updateTilesContent();
+            }
+            dragStartIndex = -1;
+            document.removeEventListener('touchend', touchEnd);
+        }
+
+        document.addEventListener('touchend', touchEnd, { once: true });
+    }
+
+    // ================= 尺寸 =================
+    function resizeBoard() {
+        let newCols = parseInt(colsInput.value, 10);
+        let newRows = parseInt(rowsInput.value, 10);
+        if (isNaN(newCols) || newCols < 2) newCols = 2;
+        if (isNaN(newRows) || newRows < 2) newRows = 2;
+        if (newCols > 8) newCols = 8;
+        if (newRows > 8) newRows = 8;
+        colsInput.value = newCols;
+        rowsInput.value = newRows;
+        cols = newCols;
+        rows = newRows;
+        initGame();
+    }
+
+    // ================= 颜色选择器 =================
+    function applyTileColor(color) {
+        document.documentElement.style.setProperty('--hr-tile-bg', color);
+        localStorage.setItem('hr-tile-bg', color);
+    }
+
+    function applyTextColor(color) {
+        document.documentElement.style.setProperty('--hr-tile-text', color);
+        localStorage.setItem('hr-tile-text', color);
+    }
+
+    tileColorInput.addEventListener('input', (e) => {
+        applyTileColor(e.target.value);
+    });
+
+    textColorInput.addEventListener('input', (e) => {
+        applyTextColor(e.target.value);
+    });
+
+    // 恢复已保存的颜色（同步到输入框）
+    const savedTileBg = localStorage.getItem('hr-tile-bg');
+    const savedTileText = localStorage.getItem('hr-tile-text');
+    if (savedTileBg) {
+        tileColorInput.value = savedTileBg;
+        applyTileColor(savedTileBg);
+    }
+    if (savedTileText) {
+        textColorInput.value = savedTileText;
+        applyTextColor(savedTileText);
+    }
+
+    // ================= 深色/浅色 =================
+    function updateDarkButton() {
+        const isDark = document.documentElement.classList.contains('dark');
+        darkToggle.innerHTML = isDark
+            ? '<i class="fa fa-sun-o mr-1"></i>浅色'
+            : '<i class="fa fa-moon-o mr-1"></i>深色';
+    }
+
+    darkToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        updateDarkButton();
+    });
+
+    // ================= 事件绑定 =================
+    window.addEventListener('keydown', handleKeyDown);
+    resizeBtn.addEventListener('click', resizeBoard);
+    resetBtn.addEventListener('click', initGame);
+    colsInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') resizeBoard(); });
+    rowsInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') resizeBoard(); });
+    window.addEventListener('blur', () => { dragStartIndex = -1; });
+
+    // ================= 启动 =================
+    updateDarkButton();
+    initGame();
+})();
+</script>
+
+</body>
+</html>
