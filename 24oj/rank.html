@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link href="./src/main.css" rel="stylesheet">
+        <title>OETD - Ranking</title>
+    </head>
+    <body>
+        <div id="app">
+            <header>
+                <img src="./src/banner.png" alt="OETD Banner">
+                <nav id="nav-bar">
+                    <a href="./index.html" data-i18n="navHome">Home</a>
+                    <a href="./rank.html" data-i18n="navRank">Ranking</a>
+                    <button id="lang-btn" class="lang-toggle">EN / 中文</button>
+                </nav>
+            </header>
+            
+            <main>
+                <h1 data-i18n="rankTitle">Difficulty Ranking</h1>
+                <p data-i18n="rankSubtitle">Sorted by number of solutions (descending).</p>
+                
+                <div id="rank-status" class="status-msg"></div>
+                <div id="rank-list"></div>
+                <div id="rank-pagination"></div>
+            </main>
+            
+            <footer>
+                <p data-i18n="footer">Data: 1820 combinations, 114573 solutions</p>
+            </footer>
+        </div>
+        <script type="module" src="./src/main.js"></script>
+    </body>
+</html>

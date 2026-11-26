@@ -1,0 +1,237 @@
+/* ==========================================
+   1964 OEIS / 早期学术数据库 复古风格
+   ========================================== */
+
+/* 1. 全局重置与基础排版 */
+body {
+    font-family: "Courier New", Courier, monospace; /* 核心：等宽字体 */
+    font-size: 14px;
+    line-height: 1.5;
+    color: #000; /* 纯黑文字 */
+    background-color: #fff; /* 纯白背景 */
+    margin: 0;
+    padding: 20px;
+}
+
+#app {
+    max-width: 800px; /* 限制宽度，模拟早期终端或打印纸 */
+    margin: 0 auto;
+}
+
+/* 2. 链接样式（复古蓝紫） */
+a {
+    color: #0000EE;
+    text-decoration: underline;
+}
+a:visited {
+    color: #551A8B;
+}
+a:hover {
+    background-color: #0000EE;
+    color: #FFF;
+}
+
+/* 3. 头部与导航 */
+header {
+    border-bottom: 2px solid #000; /* 粗黑实线分割 */
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+header img {
+    display: block;
+    margin-bottom: 10px;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #000;
+}
+
+#nav-bar {
+    margin-top: 10px;
+}
+
+#nav-bar a, .lang-toggle {
+    margin-right: 15px;
+    font-weight: bold;
+    text-transform: uppercase; /* 全大写 */
+    font-size: 13px;
+}
+
+/* 按钮伪装成复古链接或极简边框 */
+.lang-toggle, button {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    color: #0000EE;
+    text-decoration: underline;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+.lang-toggle:hover, button:hover {
+    background-color: #0000EE;
+    color: #FFF;
+}
+
+/* 4. 表单输入区 */
+.input-row {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #000; /* 单黑线边框 */
+    background-color: #f8f8f8; /* 极浅的灰底，模拟老式纸张 */
+}
+
+.input-row input[type="number"] {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    width: 40px;
+    text-align: center;
+    border: 1px solid #000;
+    padding: 2px;
+    margin-right: 5px;
+}
+
+.input-row button {
+    margin-left: 10px;
+    border: 1px solid #000;
+    padding: 2px 8px;
+    background-color: #e0e0e0;
+    color: #000;
+    text-decoration: none;
+}
+.input-row button:hover {
+    background-color: #000;
+    color: #FFF;
+}
+
+.status-msg {
+    color: #555;
+    font-style: italic;
+    margin-left: 10px;
+}
+
+/* 5. 结果展示区 */
+#result {
+    margin-top: 20px;
+}
+
+#result h3 {
+    border-bottom: 1px dashed #000; /* 虚线分割 */
+    padding-bottom: 5px;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.solution-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    columns: 2; /* 双列排版，节省空间，像早期报纸或论文 */
+    column-gap: 20px;
+}
+
+.solution-list li {
+    margin-bottom: 4px;
+    break-inside: avoid;
+}
+
+.solution-list .idx {
+    color: #666;
+    margin-right: 5px;
+}
+
+/* 6. 分页控件 */
+#pagination, #rank-pagination {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.page-btn {
+    border: 1px solid #000;
+    padding: 2px 6px;
+    background-color: #fff;
+    color: #000;
+    text-decoration: none;
+    min-width: 20px;
+    text-align: center;
+}
+
+.page-btn.active {
+    background-color: #000;
+    color: #FFF;
+    font-weight: bold;
+}
+
+.page-btn:disabled {
+    color: #999;
+    border-color: #999;
+    cursor: not-allowed;
+}
+
+.page-btn:hover:not(:disabled) {
+    background-color: #000;
+    color: #FFF;
+}
+
+#page-size-select {
+    font-family: "Courier New", Courier, monospace;
+    border: 1px solid #000;
+    padding: 2px;
+    margin-left: 10px;
+}
+
+/* 7. 排行榜表格 (rank.html) */
+.rank-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.rank-table th, .rank-table td {
+    border: 1px solid #000;
+    padding: 6px;
+    text-align: left;
+}
+
+.rank-table th {
+    background-color: #e0e0e0;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.rank-table tr:nth-child(even) {
+    background-color: #f8f8f8;
+}
+
+.rank-table .cards {
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.btn-view {
+    font-size: 12px;
+}
+
+/* 8. 页脚 */
+footer {
+    margin-top: 40px;
+    padding-top: 10px;
+    border-top: 2px solid #000;
+    text-align: center;
+    font-size: 12px;
+    color: #555;
+}
